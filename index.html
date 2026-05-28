@@ -1,0 +1,1235 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Bantu.IN – Cleaning Service & Laundry</title>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Syne:wght@700;800&display=swap" rel="stylesheet" />
+
+  <!-- Firebase SDK -->
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+    import { getDatabase, ref, push, set, onValue, update, get } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyCboRDjQ60i5oPi_x8oxVgaO1Y2JPbtnwc",
+      authDomain: "bantuin-bb3de.firebaseapp.com",
+      databaseURL: "https://bantuin-bb3de-default-rtdb.asia-southeast1.firebasedatabase.app",
+      projectId: "bantuin-bb3de",
+      storageBucket: "bantuin-bb3de.firebasestorage.app",
+      messagingSenderId: "786715492515",
+      appId: "1:786715492515:web:d3a97c5be8d6b6cd9cff16",
+      measurementId: "G-9B5ERJWVJZ"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getDatabase(app);
+
+    // Expose globally
+    window._db = db;
+    window._ref = ref;
+    window._push = push;
+    window._set = set;
+    window._onValue = onValue;
+    window._update = update;
+    window._get = get;
+    window._firebaseReady = true;
+    document.dispatchEvent(new Event("firebaseReady"));
+  </script>
+
+  <style>
+    :root {
+      
+      
+      --teal:   #0BB8D4;
+      --green:  #25C07A;
+      --orange: #FF6B2C;
+      --navy:   #0D1B3E;
+      --light:  #F4FBFE;
+      --white:  #FFFFFF;
+      --gray:   #6B7A99;
+      --border: #D8EAF5;
+      --shadow: 0 4px 24px rgba(13,27,62,.10);
+      --radius: 16px;
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      background: var(--light);
+      color: var(--navy);
+      min-height: 100vh;
+    }
+
+    /* ─── TOPBAR ─── */
+    .topbar {
+      position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+      background: var(--white);
+      border-bottom: 1.5px solid var(--border);
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 0 32px; height: 64px;
+      box-shadow: 0 2px 12px rgba(13,27,62,.06);
+    }
+    .logo { font-family: 'Syne', sans-serif; font-size: 1.5rem; font-weight: 800; color: var(--teal); }
+    .logo span { color: var(--orange); }
+    .nav-links { display: flex; gap: 8px; }
+    .nav-btn {
+      background: none; border: none; cursor: pointer;
+      padding: 8px 18px; border-radius: 8px;
+      font-family: inherit; font-size: .9rem; font-weight: 600; color: var(--navy);
+      transition: background .2s, color .2s;
+    }
+    .nav-btn:hover, .nav-btn.active { background: var(--teal); color: #fff; }
+    .nav-btn.admin-btn { color: var(--orange); }
+    .nav-btn.admin-btn:hover { background: var(--orange); color: #fff; }
+
+    /* ─── MAIN LAYOUT ─── */
+    .main { margin-top: 64px; }
+
+    /* ─── PAGES ─── */
+    .page { display: none; }
+    .page.active { display: block; }
+
+    /* ─── HERO ─── */
+    .hero {
+      background: linear-gradient(135deg, var(--navy) 0%, #1a3a6e 60%, #0BB8D4 100%);
+      color: #fff; text-align: center; padding: 80px 20px 60px;
+      position: relative; overflow: hidden;
+    }
+    .hero::before {
+      content: ''; position: absolute; inset: 0;
+      background: radial-gradient(ellipse at 70% 30%, rgba(11,184,212,.25) 0%, transparent 60%);
+    }
+    .hero h1 { font-family: 'Syne', sans-serif; font-size: clamp(2rem,5vw,3.6rem); font-weight: 800; line-height: 1.1; position: relative; }
+    .hero h1 span { color: #0BB8D4; }
+    .hero p { margin: 16px auto 32px; max-width: 560px; opacity: .85; font-size: 1.05rem; line-height: 1.6; position: relative; }
+    .hero-btns { display: flex; gap: 16px; justify-content: center; flex-wrap: wrap; position: relative; }
+    .btn { display: inline-flex; align-items: center; gap: 8px; padding: 14px 30px; border-radius: 12px; font-family: inherit; font-size: 1rem; font-weight: 700; border: none; cursor: pointer; transition: transform .15s, box-shadow .15s; }
+    .btn:hover { transform: translateY(-2px); box-shadow: 0 8px 24px rgba(0,0,0,.2); }
+    .btn-primary { background: var(--teal); color: #fff; }
+    .btn-secondary { background: var(--orange); color: #fff; }
+    .btn-outline { background: transparent; border: 2px solid #fff; color: #fff; }
+
+    /* ─── SERVICE CARDS ─── */
+    .section { padding: 56px 24px; max-width: 1100px; margin: 0 auto; }
+    .section-title { font-family: 'Syne', sans-serif; font-size: 1.9rem; font-weight: 800; margin-bottom: 8px; }
+    .section-sub { color: var(--gray); margin-bottom: 36px; font-size: .95rem; }
+    .cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 24px; }
+    .card {
+      background: var(--white); border-radius: var(--radius); padding: 32px;
+      box-shadow: var(--shadow); border: 1.5px solid var(--border);
+      transition: transform .2s, box-shadow .2s;
+    }
+    .card:hover { transform: translateY(-4px); box-shadow: 0 12px 32px rgba(13,27,62,.13); }
+    .card-icon { font-size: 2.5rem; margin-bottom: 16px; }
+    .card h3 { font-size: 1.2rem; font-weight: 700; margin-bottom: 8px; }
+    .card p { color: var(--gray); font-size: .9rem; line-height: 1.6; }
+    .card .card-cta { margin-top: 20px; }
+
+    /* ─── STATUS BADGE ─── */
+    .status-badge {
+      display: inline-flex; align-items: center; gap: 6px;
+      padding: 4px 12px; border-radius: 20px; font-size: .78rem; font-weight: 700;
+    }
+    .s-1 { background: #FFF3CD; color: #8B6914; }
+    .s-2 { background: #CCE5FF; color: #004085; }
+    .s-3 { background: #D4EDDA; color: #155724; }
+    .s-4 { background: #D1ECF1; color: #0c5460; }
+    .s-5 { background: #D6D8FF; color: #2E2EAA; }
+    .s-6 { background: #C3E6CB; color: #155724; }
+    .s-7 { background: #F8D7DA; color: #721c24; }
+
+    /* ─── FORM ─── */
+    .form-card {
+      background: var(--white); border-radius: var(--radius); padding: 40px;
+      box-shadow: var(--shadow); border: 1.5px solid var(--border);
+      max-width: 680px; margin: 0 auto;
+    }
+    .form-title { font-family: 'Syne', sans-serif; font-size: 1.5rem; font-weight: 800; margin-bottom: 24px; }
+    .form-group { margin-bottom: 20px; }
+    .form-group label { display: block; font-size: .85rem; font-weight: 600; margin-bottom: 6px; color: var(--navy); }
+    .form-group input, .form-group select, .form-group textarea {
+      width: 100%; padding: 12px 16px; border-radius: 10px;
+      border: 1.5px solid var(--border); font-family: inherit; font-size: .95rem;
+      background: var(--light); color: var(--navy); transition: border-color .2s;
+    }
+    .form-group input:focus, .form-group select:focus, .form-group textarea:focus {
+      outline: none; border-color: var(--teal); background: #fff;
+    }
+    .form-group textarea { min-height: 90px; resize: vertical; }
+    .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+    .price-display {
+      background: linear-gradient(135deg, var(--teal), #0FA6C0);
+      color: #fff; border-radius: 12px; padding: 16px 20px;
+      display: flex; justify-content: space-between; align-items: center;
+      margin: 24px 0; font-weight: 700;
+    }
+    .price-display .amount { font-size: 1.6rem; }
+    .form-step { display: none; }
+    .form-step.active { display: block; }
+    .step-indicator { display: flex; gap: 8px; margin-bottom: 28px; }
+    .step-dot { width: 10px; height: 10px; border-radius: 50%; background: var(--border); transition: background .3s; }
+    .step-dot.done { background: var(--teal); }
+
+    /* ─── ORDER LIST ─── */
+    .order-list { display: flex; flex-direction: column; gap: 16px; }
+    .order-item {
+      background: var(--white); border-radius: 12px; padding: 20px 24px;
+      border: 1.5px solid var(--border); box-shadow: 0 2px 8px rgba(13,27,62,.06);
+      display: flex; align-items: center; justify-content: space-between; gap: 16px; flex-wrap: wrap;
+    }
+    .order-meta h4 { font-size: 1rem; font-weight: 700; }
+    .order-meta p { font-size: .82rem; color: var(--gray); margin-top: 4px; }
+    .order-actions { display: flex; gap: 8px; flex-wrap: wrap; }
+    .action-btn {
+      padding: 7px 16px; border-radius: 8px; font-family: inherit; font-size: .82rem;
+      font-weight: 600; border: none; cursor: pointer; transition: opacity .2s;
+    }
+    .action-btn:hover { opacity: .85; }
+    .ab-blue { background: #CCE5FF; color: #004085; }
+    .ab-green { background: #C3E6CB; color: #155724; }
+    .ab-orange { background: #FFE0CC; color: #7A3000; }
+    .ab-red { background: #F8D7DA; color: #721c24; }
+
+    /* ─── TRACKING ─── */
+    .track-wrap { max-width: 560px; margin: 0 auto; }
+    .track-timeline { margin-top: 24px; }
+    .track-step {
+      display: flex; gap: 16px; align-items: flex-start; padding-bottom: 24px;
+      position: relative;
+    }
+    .track-step::before {
+      content: ''; position: absolute; left: 17px; top: 36px; bottom: 0;
+      width: 2px; background: var(--border);
+    }
+    .track-step:last-child::before { display: none; }
+    .track-dot {
+      width: 36px; height: 36px; border-radius: 50%; flex-shrink: 0;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 1rem; background: var(--border); color: var(--gray);
+    }
+    .track-dot.done { background: var(--teal); color: #fff; }
+    .track-dot.current { background: var(--orange); color: #fff; box-shadow: 0 0 0 4px rgba(255,107,44,.2); }
+    .track-info h5 { font-weight: 700; font-size: .95rem; }
+    .track-info p { font-size: .82rem; color: var(--gray); margin-top: 2px; }
+
+    /* ─── ADMIN DASHBOARD ─── */
+    .admin-header {
+      background: var(--navy); color: #fff; padding: 28px 32px;
+      display: flex; align-items: center; justify-content: space-between; gap: 16px; flex-wrap: wrap;
+    }
+    .admin-header h2 { font-family: 'Syne', sans-serif; font-size: 1.4rem; font-weight: 800; }
+    .stats-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 16px; padding: 24px 32px; }
+    .stat-card {
+      background: var(--white); border-radius: 12px; padding: 20px;
+      border: 1.5px solid var(--border); text-align: center;
+    }
+    .stat-card .num { font-family: 'Syne', sans-serif; font-size: 2rem; font-weight: 800; color: var(--teal); }
+    .stat-card .label { font-size: .8rem; color: var(--gray); margin-top: 4px; font-weight: 600; }
+    .filter-row { padding: 0 32px 16px; display: flex; gap: 12px; flex-wrap: wrap; align-items: center; }
+    .filter-select { padding: 8px 14px; border-radius: 8px; border: 1.5px solid var(--border); font-family: inherit; font-size: .87rem; background: var(--white); }
+    .admin-table-wrap { padding: 0 32px 32px; overflow-x: auto; }
+    .admin-table { width: 100%; border-collapse: collapse; font-size: .88rem; }
+    .admin-table th { background: var(--light); padding: 12px 14px; text-align: left; font-weight: 700; border-bottom: 2px solid var(--border); white-space: nowrap; }
+    .admin-table td { padding: 12px 14px; border-bottom: 1px solid var(--border); vertical-align: middle; }
+    .admin-table tr:hover td { background: #F0F8FC; }
+
+    /* ─── RATING ─── */
+    .stars { display: flex; gap: 4px; font-size: 1.8rem; cursor: pointer; }
+    .star { color: var(--border); transition: color .15s; }
+    .star.lit { color: #FFBA08; }
+
+    /* ─── WHATSAPP NOTIF ─── */
+    .wa-bubble {
+      background: #E7FFDB; border-radius: 12px; padding: 14px 18px;
+      font-size: .87rem; color: #1A3300; line-height: 1.6;
+      border: 1px solid #C3F0A5; max-width: 380px;
+      font-family: -apple-system, BlinkMacSystemFont, sans-serif;
+    }
+    .wa-bubble .wa-header { font-weight: 700; margin-bottom: 6px; color: #128C7E; }
+
+    /* ─── MODALS ─── */
+    .overlay {
+      position: fixed; inset: 0; background: rgba(13,27,62,.55);
+      display: flex; align-items: center; justify-content: center; z-index: 200;
+      padding: 20px; backdrop-filter: blur(2px);
+      opacity: 0; pointer-events: none; transition: opacity .2s;
+    }
+    .overlay.open { opacity: 1; pointer-events: auto; }
+    .modal {
+      background: var(--white); border-radius: 20px; padding: 36px;
+      max-width: 520px; width: 100%; max-height: 90vh; overflow-y: auto;
+      box-shadow: 0 24px 60px rgba(13,27,62,.22);
+      transform: translateY(20px); transition: transform .25s;
+    }
+    .overlay.open .modal { transform: translateY(0); }
+    .modal-title { font-family: 'Syne', sans-serif; font-size: 1.3rem; font-weight: 800; margin-bottom: 24px; }
+    .modal-close { float: right; background: none; border: none; font-size: 1.4rem; cursor: pointer; color: var(--gray); }
+
+    /* ─── TOAST ─── */
+    #toast {
+      position: fixed; bottom: 28px; right: 28px; z-index: 999;
+      background: var(--navy); color: #fff; padding: 14px 22px; border-radius: 12px;
+      font-size: .9rem; font-weight: 600; box-shadow: 0 8px 24px rgba(0,0,0,.2);
+      transform: translateY(80px); opacity: 0; transition: all .3s;
+    }
+    #toast.show { transform: translateY(0); opacity: 1; }
+    #toast.success { background: var(--green); }
+    #toast.error { background: #DC3545; }
+
+    /* ─── EMPTY STATE ─── */
+    .empty { text-align: center; padding: 60px 20px; color: var(--gray); }
+    .empty .icon { font-size: 3rem; margin-bottom: 12px; }
+
+    /* ─── RESPONSIVE ─── */
+    @media (max-width: 600px) {
+      .topbar { padding: 0 16px; }
+      .form-card { padding: 24px 18px; }
+      .form-row { grid-template-columns: 1fr; }
+      .admin-header, .stats-row, .filter-row, .admin-table-wrap { padding-left: 16px; padding-right: 16px; }
+    }
+
+    .chip {
+      display: inline-block; padding: 3px 10px; border-radius: 6px;
+      font-size: .75rem; font-weight: 700; background: var(--light); color: var(--navy);
+    }
+    .chip.cleaning { background: #DBEAFE; color: #1E40AF; }
+    .chip.laundry { background: #D1FAE5; color: #065F46; }
+
+    .service-type-btns { display: flex; gap: 16px; margin-bottom: 24px; }
+    .service-type-btn {
+      flex: 1; padding: 20px 16px; border-radius: 14px; border: 2px solid var(--border);
+      background: var(--white); cursor: pointer; font-family: inherit; font-weight: 700;
+      font-size: 1rem; color: var(--navy); transition: all .2s; text-align: center;
+    }
+    .service-type-btn:hover, .service-type-btn.selected {
+      border-color: var(--teal); background: #EEF9FC; color: var(--teal);
+    }
+    .service-type-btn .icon { font-size: 1.8rem; display: block; margin-bottom: 8px; }
+
+    /* progress bar */
+    .progress-bar { height: 6px; background: var(--border); border-radius: 3px; margin-bottom: 28px; }
+    .progress-fill { height: 100%; background: var(--teal); border-radius: 3px; transition: width .3s; }
+
+    .divider { border: none; border-top: 1.5px solid var(--border); margin: 32px 0; }
+
+    .info-box { background: #EEF9FC; border-radius: 10px; padding: 14px 18px; font-size: .87rem; line-height: 1.6; color: #0c5460; margin-bottom: 20px; }
+    .info-box strong { color: var(--teal); }
+  </style>
+</head>
+<body>
+
+<!-- ─── TOPBAR ─── -->
+<nav class="topbar">
+  <div class="logo">Bantu<span>.IN</span></div>
+  <div class="nav-links">
+    <button class="nav-btn active" onclick="showPage('home')">🏠 Beranda</button>
+    <button class="nav-btn" onclick="showPage('order')">📋 Pesan</button>
+    <button class="nav-btn" onclick="showPage('track')">📍 Lacak</button>
+    <button class="nav-btn admin-btn" onclick="showPage('admin')">⚙️ Admin</button>
+  </div>
+</nav>
+
+<div class="main">
+
+  <!-- ══════════════════════════════════════
+       PAGE: HOME
+  ══════════════════════════════════════ -->
+  <div id="page-home" class="page active">
+
+    <div class="hero">
+      <h1>Semua Jadi Bersih,<br><span>Semua Jadi Mudah.</span></h1>
+      <p>Jasa cleaning service & laundry profesional. Pesan sekarang, kami datang ke tempat Anda.</p>
+      <div class="hero-btns">
+        <button class="btn btn-primary" onclick="showPage('order')">🧹 Pesan Sekarang</button>
+        <button class="btn btn-secondary" onclick="showPage('track')">📍 Lacak Pesanan</button>
+        <button class="btn btn-outline" onclick="openWhatsApp()">💬 Hubungi Kami</button>
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="section-title">Layanan Kami</div>
+      <div class="section-sub">Pilih layanan yang sesuai dengan kebutuhan Anda</div>
+      <div class="cards">
+        <div class="card">
+          <div class="card-icon">🧹</div>
+          <h3>Cleaning Service</h3>
+          <p>Pembersihan profesional untuk rumah, kantor, kos/kontrakan, deep cleaning, dan sofa/kasur. Tenaga terlatih & peralatan lengkap.</p>
+          <div class="card-cta">
+            <button class="btn btn-primary" style="padding:10px 20px;font-size:.88rem" onclick="showPage('order');setServiceType('cleaning')">Pilih Cleaning →</button>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-icon">👕</div>
+          <h3>Laundry</h3>
+          <p>Regular, express, sepatu, & bed cover. Pickup & delivery ke pintu Anda. Bersih, wangi, dan tepat waktu.</p>
+          <div class="card-cta">
+            <button class="btn btn-primary" style="padding:10px 20px;font-size:.88rem" onclick="showPage('order');setServiceType('laundry')">Pilih Laundry →</button>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-icon">⚡</div>
+          <h3>Tracking Real-Time</h3>
+          <p>Pantau status pesanan Anda secara langsung. Notifikasi WhatsApp otomatis di setiap tahap pengerjaan.</p>
+          <div class="card-cta">
+            <button class="btn btn-secondary" style="padding:10px 20px;font-size:.88rem;background:var(--orange)" onclick="showPage('track')">Lacak Pesanan →</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- STATUS ORDER INFO -->
+    <div style="background:var(--white);border-top:1.5px solid var(--border);padding:32px 24px;">
+      <div style="max-width:1100px;margin:0 auto;">
+        <div class="section-title" style="font-size:1.3rem;margin-bottom:20px;">Status Pesanan</div>
+        <div style="display:flex;gap:12px;flex-wrap:wrap;">
+          <span class="status-badge s-1">① Menunggu</span>
+          <span class="status-badge s-2">② Diproses</span>
+          <span class="status-badge s-3">③ Pickup</span>
+          <span class="status-badge s-4">④ Dicuci</span>
+          <span class="status-badge s-5">⑤ Diantar</span>
+          <span class="status-badge s-6">⑥ Selesai</span>
+          <span class="status-badge s-7">⑦ Dibatalkan</span>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- ══════════════════════════════════════
+       PAGE: ORDER
+  ══════════════════════════════════════ -->
+  <div id="page-order" class="page">
+    <div class="section" style="max-width:720px;">
+      <div class="section-title">📋 Buat Pesanan Baru</div>
+      <div class="section-sub">Isi form di bawah dengan lengkap</div>
+
+      <div class="form-card">
+
+        <!-- Step indicator -->
+        <div class="step-indicator">
+          <div class="step-dot done" id="dot0"></div>
+          <div class="step-dot" id="dot1"></div>
+          <div class="step-dot" id="dot2"></div>
+          <div class="step-dot" id="dot3"></div>
+        </div>
+        <div class="progress-bar"><div class="progress-fill" id="progBar" style="width:25%"></div></div>
+
+        <!-- STEP 0: Pilih Jenis Layanan -->
+        <div class="form-step active" id="step0">
+          <div class="form-title">Pilih Jenis Layanan</div>
+          <div class="service-type-btns">
+            <button class="service-type-btn" id="btn-cleaning" onclick="selectService('cleaning')">
+              <span class="icon">🧹</span>Cleaning Service
+            </button>
+            <button class="service-type-btn" id="btn-laundry" onclick="selectService('laundry')">
+              <span class="icon">👕</span>Laundry
+            </button>
+          </div>
+
+          <!-- CLEANING sub-options -->
+          <div id="cleaning-opts" style="display:none">
+            <div class="form-group">
+              <label>Jenis Cleaning</label>
+              <select id="c-type">
+                <option value="">-- Pilih --</option>
+                <option value="Rumah">🏠 Rumah</option>
+                <option value="Kantor">🏢 Kantor</option>
+                <option value="Deep Cleaning">🔬 Deep Cleaning</option>
+                <option value="Kos/Kontrakan">🚪 Kos / Kontrakan</option>
+                <option value="Sofa & Kasur">🛋️ Sofa & Kasur</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label>Luas Ruangan (m²)</label>
+              <input type="number" id="c-area" placeholder="cth: 50" min="1" oninput="calcPrice()"/>
+            </div>
+            <div class="form-group">
+              <label>Durasi (jam)</label>
+              <select id="c-duration" onchange="calcPrice()">
+                <option value="2">2 Jam</option>
+                <option value="3">3 Jam</option>
+                <option value="4">4 Jam</option>
+                <option value="6">6 Jam</option>
+                <option value="8">8 Jam (Full Day)</option>
+              </select>
+            </div>
+          </div>
+
+          <!-- LAUNDRY sub-options -->
+          <div id="laundry-opts" style="display:none">
+            <div class="form-group">
+              <label>Jenis Laundry</label>
+              <select id="l-type" onchange="calcPrice()">
+                <option value="">-- Pilih --</option>
+                <option value="Regular">Regular (3 hari)</option>
+                <option value="Express">Express (1 hari)</option>
+                <option value="Sepatu">Sepatu</option>
+                <option value="Bed Cover">Bed Cover</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label>Estimasi Berat (kg)</label>
+              <input type="number" id="l-weight" placeholder="cth: 3" min="0.5" step="0.5" oninput="calcPrice()"/>
+            </div>
+            <div class="form-group">
+              <label>Pickup / Delivery</label>
+              <select id="l-delivery">
+                <option value="pickup">Pickup ke Lokasi (+Gratis)</option>
+                <option value="antar-sendiri">Antar Sendiri (-Diskon 5%)</option>
+              </select>
+            </div>
+          </div>
+
+          <div id="price-box" style="display:none">
+            <div class="price-display">
+              <div>
+                <div style="font-size:.82rem;opacity:.8">Estimasi Harga</div>
+                <div class="amount" id="price-amount">Rp 0</div>
+              </div>
+              <div style="font-size:1.6rem">💰</div>
+            </div>
+          </div>
+          <button class="btn btn-primary" style="width:100%" onclick="nextStep(1)">Lanjut →</button>
+        </div>
+
+        <!-- STEP 1: Jadwal & Lokasi -->
+        <div class="form-step" id="step1">
+          <div class="form-title">📅 Jadwal & Lokasi</div>
+          <div class="form-row">
+            <div class="form-group">
+              <label>Tanggal</label>
+              <input type="date" id="o-date" />
+            </div>
+            <div class="form-group">
+              <label>Jam</label>
+              <input type="time" id="o-time" value="09:00" />
+            </div>
+          </div>
+          <div class="form-group">
+            <label>Alamat Lengkap</label>
+            <textarea id="o-address" placeholder="Jl. Contoh No.12, RT 01/RW 03, Kelurahan, Kecamatan, Kota"></textarea>
+          </div>
+          <div style="display:flex;gap:12px;">
+            <button class="btn btn-outline" style="border-color:var(--border);color:var(--navy)" onclick="nextStep(0)">← Kembali</button>
+            <button class="btn btn-primary" style="flex:1" onclick="nextStep(2)">Lanjut →</button>
+          </div>
+        </div>
+
+        <!-- STEP 2: Data Diri -->
+        <div class="form-step" id="step2">
+          <div class="form-title">👤 Data Diri</div>
+          <div class="form-group">
+            <label>Nama Lengkap</label>
+            <input type="text" id="o-name" placeholder="Nama Anda" />
+          </div>
+          <div class="form-group">
+            <label>Nomor WhatsApp</label>
+            <input type="tel" id="o-wa" placeholder="08xxxxxxxxxx" />
+          </div>
+          <div class="form-group">
+            <label>Catatan Tambahan (opsional)</label>
+            <textarea id="o-notes" placeholder="Instruksi khusus, akses masuk, dll."></textarea>
+          </div>
+          <div style="display:flex;gap:12px;">
+            <button class="btn btn-outline" style="border-color:var(--border);color:var(--navy)" onclick="nextStep(1)">← Kembali</button>
+            <button class="btn btn-primary" style="flex:1" onclick="nextStep(3)">Review Pesanan →</button>
+          </div>
+        </div>
+
+        <!-- STEP 3: Konfirmasi -->
+        <div class="form-step" id="step3">
+          <div class="form-title">✅ Konfirmasi Pesanan</div>
+          <div class="info-box" id="order-summary"></div>
+
+          <div class="form-group">
+            <label>Metode Pembayaran</label>
+            <select id="o-payment">
+              <option value="COD">💵 COD (Bayar di Tempat)</option>
+              <option value="Transfer">🏦 Transfer Bank</option>
+              <option value="QRIS">📱 QRIS</option>
+              <option value="E-Wallet">💳 E-Wallet</option>
+            </select>
+          </div>
+
+          <div class="price-display">
+            <div>
+              <div style="font-size:.82rem;opacity:.8">Total Pembayaran</div>
+              <div class="amount" id="confirm-price">Rp 0</div>
+            </div>
+            <div style="font-size:1.6rem">🧾</div>
+          </div>
+
+          <div style="display:flex;gap:12px;">
+            <button class="btn btn-outline" style="border-color:var(--border);color:var(--navy)" onclick="nextStep(2)">← Kembali</button>
+            <button class="btn btn-secondary" style="flex:1" onclick="submitOrder()" id="submit-btn">🚀 Pesan Sekarang!</button>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════════
+       PAGE: TRACK
+  ══════════════════════════════════════ -->
+  <div id="page-track" class="page">
+    <div class="section" style="max-width:600px;">
+      <div class="section-title">📍 Lacak Pesanan</div>
+      <div class="section-sub">Masukkan nomor pesanan atau nomor WhatsApp Anda</div>
+
+      <div class="form-card">
+        <div class="form-group">
+          <label>Nomor Pesanan / WhatsApp</label>
+          <input type="text" id="track-input" placeholder="Masukkan ID pesanan atau 08xxx..." />
+        </div>
+        <button class="btn btn-primary" style="width:100%" onclick="trackOrder()">🔍 Lacak</button>
+      </div>
+
+      <div id="track-result" style="margin-top:24px;display:none"></div>
+      <div id="track-empty" style="display:none">
+        <div class="empty">
+          <div class="icon">🔍</div>
+          <div>Pesanan tidak ditemukan. Periksa kembali nomor yang Anda masukkan.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════════
+       PAGE: ADMIN
+  ══════════════════════════════════════ -->
+  <div id="page-admin" class="page">
+
+    <!-- Admin login wall -->
+    <div id="admin-login" style="max-width:420px;margin:60px auto;padding:0 24px;">
+      <div class="form-card">
+        <div class="form-title">⚙️ Admin Login</div>
+        <div class="form-group">
+          <label>Password</label>
+          <input type="password" id="admin-pw" placeholder="Masukkan password admin" onkeydown="if(event.key==='Enter')adminLogin()" />
+        </div>
+        <button class="btn btn-primary" style="width:100%" onclick="adminLogin()">Masuk</button>
+      </div>
+    </div>
+
+    <!-- Admin dashboard (hidden until login) -->
+    <div id="admin-dashboard" style="display:none">
+      <div class="admin-header">
+        <div>
+          <h2>⚙️ Dashboard Admin — Bantu.IN</h2>
+          <div style="font-size:.85rem;opacity:.7;margin-top:4px">Kelola semua pesanan masuk</div>
+        </div>
+        <button class="btn btn-outline" onclick="adminLogout()" style="padding:8px 18px;font-size:.85rem">Keluar</button>
+      </div>
+
+      <div class="stats-row" id="stats-row">
+        <div class="stat-card"><div class="num" id="s-total">0</div><div class="label">Total Pesanan</div></div>
+        <div class="stat-card"><div class="num" id="s-menunggu">0</div><div class="label">Menunggu</div></div>
+        <div class="stat-card"><div class="num" id="s-proses">0</div><div class="label">Diproses</div></div>
+        <div class="stat-card"><div class="num" id="s-selesai">0</div><div class="label">Selesai</div></div>
+      </div>
+
+      <div class="filter-row">
+        <select class="filter-select" id="filter-status" onchange="renderAdminTable()">
+          <option value="">Semua Status</option>
+          <option value="Menunggu">Menunggu</option>
+          <option value="Diproses">Diproses</option>
+          <option value="Pickup">Pickup</option>
+          <option value="Dicuci">Dicuci</option>
+          <option value="Diantar">Diantar</option>
+          <option value="Selesai">Selesai</option>
+          <option value="Dibatalkan">Dibatalkan</option>
+        </select>
+        <select class="filter-select" id="filter-type" onchange="renderAdminTable()">
+          <option value="">Semua Layanan</option>
+          <option value="cleaning">Cleaning</option>
+          <option value="laundry">Laundry</option>
+        </select>
+        <button class="btn btn-primary" style="padding:8px 18px;font-size:.85rem" onclick="exportCSV()">⬇️ Export CSV</button>
+      </div>
+
+      <div class="admin-table-wrap">
+        <table class="admin-table">
+          <thead>
+            <tr>
+              <th>ID</th><th>Nama</th><th>WA</th><th>Layanan</th>
+              <th>Tipe</th><th>Tanggal</th><th>Harga</th>
+              <th>Bayar</th><th>Status</th><th>Aksi</th>
+            </tr>
+          </thead>
+          <tbody id="admin-tbody"></tbody>
+        </table>
+      </div>
+    </div>
+
+  </div>
+
+</div><!-- /main -->
+
+<!-- ─── MODAL: ORDER SUCCESS ─── -->
+<div class="overlay" id="modal-success">
+  <div class="modal" style="text-align:center">
+    <div style="font-size:3rem;margin-bottom:16px">🎉</div>
+    <div class="modal-title" style="text-align:center">Pesanan Berhasil!</div>
+    <p style="color:var(--gray);margin-bottom:24px;line-height:1.6">
+      Pesanan Anda sudah masuk. Admin kami akan segera mengkonfirmasi dalam waktu singkat.
+      Notifikasi WhatsApp akan dikirim ke nomor Anda.
+    </p>
+    <div id="wa-preview" style="margin-bottom:24px"></div>
+    <div style="background:var(--light);border-radius:10px;padding:14px;margin-bottom:20px;font-size:.9rem">
+      ID Pesanan: <strong id="success-order-id" style="color:var(--teal)"></strong>
+    </div>
+
+    <!-- Rating -->
+    <div id="rating-section">
+      <div style="font-weight:700;margin-bottom:10px">Beri rating layanan kami:</div>
+      <div class="stars" id="stars">
+        <span class="star" onclick="setRating(1)">★</span>
+        <span class="star" onclick="setRating(2)">★</span>
+        <span class="star" onclick="setRating(3)">★</span>
+        <span class="star" onclick="setRating(4)">★</span>
+        <span class="star" onclick="setRating(5)">★</span>
+      </div>
+      <textarea id="ulasan" placeholder="Tulis ulasan (opsional)..." style="width:100%;margin-top:12px;padding:10px;border-radius:8px;border:1.5px solid var(--border);font-family:inherit;font-size:.88rem;min-height:70px;resize:vertical"></textarea>
+    </div>
+
+    <div style="display:flex;gap:12px;margin-top:20px;">
+      <button class="btn btn-outline" style="flex:1;border-color:var(--border);color:var(--navy)" onclick="closeModal('modal-success');showPage('track')">📍 Lacak Pesanan</button>
+      <button class="btn btn-primary" style="flex:1" onclick="closeModal('modal-success');showPage('home')">🏠 Beranda</button>
+    </div>
+  </div>
+</div>
+
+<!-- ─── MODAL: ORDER DETAIL (admin) ─── -->
+<div class="overlay" id="modal-detail">
+  <div class="modal">
+    <button class="modal-close" onclick="closeModal('modal-detail')">✕</button>
+    <div class="modal-title">📄 Detail Pesanan</div>
+    <div id="modal-detail-body"></div>
+    <div style="display:flex;gap:12px;margin-top:20px;flex-wrap:wrap" id="modal-detail-actions"></div>
+  </div>
+</div>
+
+<!-- ─── TOAST ─── -->
+<div id="toast"></div>
+
+<script>
+/* ══════════════════════════════════════════════
+   STATE
+══════════════════════════════════════════════ */
+let allOrders = {};
+let currentStep = 0;
+let selectedService = '';
+let estimatedPrice = 0;
+let currentOrderId = '';
+let selectedRating = 0;
+let adminLoggedIn = false;
+
+const ADMIN_PASSWORD = "bantuin2024"; // ganti sesuai kebutuhan
+
+/* ══════════════════════════════════════════════
+   NAVIGATION
+══════════════════════════════════════════════ */
+function showPage(id) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('page-' + id).classList.add('active');
+  const idx = ['home','order','track','admin'].indexOf(id);
+  document.querySelectorAll('.nav-btn')[idx]?.classList.add('active');
+  window.scrollTo(0,0);
+  if (id === 'admin' && adminLoggedIn) loadAdminOrders();
+  if (id === 'order') resetForm();
+}
+
+/* ══════════════════════════════════════════════
+   ORDER FORM
+══════════════════════════════════════════════ */
+function resetForm() {
+  currentStep = 0;
+  selectedService = '';
+  estimatedPrice = 0;
+  document.querySelectorAll('.form-step').forEach((s,i) => {
+    s.classList.toggle('active', i === 0);
+  });
+  updateProgress();
+  document.getElementById('cleaning-opts').style.display = 'none';
+  document.getElementById('laundry-opts').style.display = 'none';
+  document.getElementById('price-box').style.display = 'none';
+  document.querySelectorAll('.service-type-btn').forEach(b => b.classList.remove('selected'));
+  // Reset inputs
+  ['c-type','c-area','c-duration','l-type','l-weight','l-delivery','o-date','o-time','o-address','o-name','o-wa','o-notes','o-payment'].forEach(id => {
+    const el = document.getElementById(id);
+    if (!el) return;
+    if (el.tagName === 'SELECT') el.selectedIndex = 0;
+    else el.value = '';
+  });
+  document.getElementById('o-time').value = '09:00';
+  // Set min date = today
+  const today = new Date().toISOString().split('T')[0];
+  document.getElementById('o-date').min = today;
+}
+
+function setServiceType(type) {
+  selectService(type);
+}
+
+function selectService(type) {
+  selectedService = type;
+  document.getElementById('cleaning-opts').style.display = type === 'cleaning' ? 'block' : 'none';
+  document.getElementById('laundry-opts').style.display = type === 'laundry' ? 'block' : 'none';
+  document.getElementById('btn-cleaning').classList.toggle('selected', type === 'cleaning');
+  document.getElementById('btn-laundry').classList.toggle('selected', type === 'laundry');
+  document.getElementById('price-box').style.display = 'block';
+  calcPrice();
+}
+
+function calcPrice() {
+  let price = 0;
+  if (selectedService === 'cleaning') {
+    const area = parseFloat(document.getElementById('c-area').value) || 0;
+    const dur = parseInt(document.getElementById('c-duration').value) || 2;
+    const type = document.getElementById('c-type').value;
+    const base = { 'Rumah':35000,'Kantor':40000,'Deep Cleaning':55000,'Kos/Kontrakan':30000,'Sofa & Kasur':50000 };
+    price = (base[type] || 35000) * dur + area * 500;
+    if (price < 80000) price = 80000;
+  } else if (selectedService === 'laundry') {
+    const type = document.getElementById('l-type').value;
+    const wt = parseFloat(document.getElementById('l-weight').value) || 0;
+    const rates = { 'Regular':7000,'Express':12000,'Sepatu':25000,'Bed Cover':35000 };
+    if (type === 'Sepatu' || type === 'Bed Cover') price = rates[type] || 0;
+    else price = (rates[type] || 7000) * (wt || 1);
+    if (price < 15000) price = 15000;
+  }
+  estimatedPrice = Math.round(price);
+  const fmt = 'Rp ' + estimatedPrice.toLocaleString('id-ID');
+  document.getElementById('price-amount').textContent = fmt;
+  document.getElementById('confirm-price').textContent = fmt;
+}
+
+function nextStep(to) {
+  if (to > currentStep) {
+    if (!validateStep(currentStep)) return;
+  }
+  currentStep = to;
+  document.querySelectorAll('.form-step').forEach((s,i) => {
+    s.classList.toggle('active', i === to);
+  });
+  updateProgress();
+  if (to === 3) buildSummary();
+}
+
+function updateProgress() {
+  const pct = [25, 50, 75, 100][currentStep];
+  document.getElementById('progBar').style.width = pct + '%';
+  for (let i = 0; i <= 3; i++) {
+    document.getElementById('dot' + i).classList.toggle('done', i <= currentStep);
+  }
+}
+
+function validateStep(step) {
+  if (step === 0) {
+    if (!selectedService) { showToast('Pilih jenis layanan dulu!','error'); return false; }
+    if (selectedService === 'cleaning') {
+      if (!document.getElementById('c-type').value) { showToast('Pilih jenis cleaning!','error'); return false; }
+    }
+    if (selectedService === 'laundry') {
+      if (!document.getElementById('l-type').value) { showToast('Pilih jenis laundry!','error'); return false; }
+    }
+  }
+  if (step === 1) {
+    if (!document.getElementById('o-date').value) { showToast('Pilih tanggal!','error'); return false; }
+    if (!document.getElementById('o-address').value.trim()) { showToast('Isi alamat lengkap!','error'); return false; }
+  }
+  if (step === 2) {
+    if (!document.getElementById('o-name').value.trim()) { showToast('Isi nama Anda!','error'); return false; }
+    const wa = document.getElementById('o-wa').value.trim();
+    if (!wa || wa.length < 10) { showToast('Nomor WhatsApp tidak valid!','error'); return false; }
+  }
+  return true;
+}
+
+function buildSummary() {
+  const name = document.getElementById('o-name').value;
+  const wa = document.getElementById('o-wa').value;
+  const date = document.getElementById('o-date').value;
+  const time = document.getElementById('o-time').value;
+  const addr = document.getElementById('o-address').value;
+  let layanan = '', detail = '';
+  if (selectedService === 'cleaning') {
+    layanan = 'Cleaning Service';
+    detail = document.getElementById('c-type').value + ' — ' + document.getElementById('c-duration').value + ' jam';
+  } else {
+    layanan = 'Laundry';
+    detail = document.getElementById('l-type').value + ' — ' + document.getElementById('l-weight').value + ' kg';
+  }
+  document.getElementById('order-summary').innerHTML = `
+    <strong>Ringkasan Pesanan:</strong><br>
+    👤 ${name} | 📱 ${wa}<br>
+    🛎️ ${layanan}: ${detail}<br>
+    📅 ${date} pukul ${time}<br>
+    📍 ${addr}<br>
+    💰 Estimasi: <strong>Rp ${estimatedPrice.toLocaleString('id-ID')}</strong>
+  `;
+  document.getElementById('confirm-price').textContent = 'Rp ' + estimatedPrice.toLocaleString('id-ID');
+}
+
+async function submitOrder() {
+  if (!window._firebaseReady) { showToast('Koneksi Firebase belum siap, coba lagi!','error'); return; }
+  const btn = document.getElementById('submit-btn');
+  btn.disabled = true; btn.textContent = '⏳ Memproses...';
+
+  const name = document.getElementById('o-name').value.trim();
+  const wa = document.getElementById('o-wa').value.trim();
+  const date = document.getElementById('o-date').value;
+  const time = document.getElementById('o-time').value;
+  const addr = document.getElementById('o-address').value.trim();
+  const payment = document.getElementById('o-payment').value;
+  const notes = document.getElementById('o-notes').value.trim();
+
+  let detail = {};
+  if (selectedService === 'cleaning') {
+    detail = {
+      jenis: document.getElementById('c-type').value,
+      area: document.getElementById('c-area').value,
+      durasi: document.getElementById('c-duration').value,
+    };
+  } else {
+    detail = {
+      jenis: document.getElementById('l-type').value,
+      berat: document.getElementById('l-weight').value,
+      delivery: document.getElementById('l-delivery').value,
+    };
+  }
+
+  const order = {
+    name, wa, date, time, address: addr, payment, notes,
+    serviceType: selectedService,
+    detail,
+    price: estimatedPrice,
+    status: 'Menunggu',
+    createdAt: new Date().toISOString(),
+    rating: 0,
+    ulasan: '',
+  };
+
+  try {
+    const ordersRef = window._ref(window._db, 'orders');
+    const newRef = window._push(ordersRef);
+    await window._set(newRef, order);
+    currentOrderId = newRef.key;
+
+    // Show success modal
+    document.getElementById('success-order-id').textContent = currentOrderId;
+
+    // WA preview
+    document.getElementById('wa-preview').innerHTML = `
+      <div class="wa-bubble">
+        <div class="wa-header">📲 Notifikasi WhatsApp</div>
+        Halo ${name}! 👋<br>
+        Pesanan Anda sedang dibuat.<br>
+        Layanan: [${selectedService === 'cleaning' ? 'Cleaning' : 'Laundry'}]<br>
+        Jadwal: ${date} ${time}<br>
+        Alamat: ${addr}<br>
+        Total: <strong>Rp ${estimatedPrice.toLocaleString('id-ID')}</strong><br><br>
+        Status: <strong>MENUNGGU KONFIRMASI</strong><br>
+        Terima kasih, Bantu.IN 🙏
+      </div>
+    `;
+
+    selectedRating = 0;
+    document.querySelectorAll('.star').forEach(s => s.classList.remove('lit'));
+    openModal('modal-success');
+    resetForm();
+    showPage('home');
+    showToast('Pesanan berhasil dibuat! 🎉','success');
+  } catch(e) {
+    console.error(e);
+    showToast('Gagal menyimpan pesanan. Coba lagi!','error');
+  }
+
+  btn.disabled = false; btn.textContent = '🚀 Pesan Sekarang!';
+}
+
+/* ══════════════════════════════════════════════
+   RATING
+══════════════════════════════════════════════ */
+function setRating(n) {
+  selectedRating = n;
+  document.querySelectorAll('.star').forEach((s,i) => s.classList.toggle('lit', i < n));
+}
+
+async function saveRating() {
+  if (!currentOrderId || !window._firebaseReady) return;
+  const ulasan = document.getElementById('ulasan').value;
+  const orderRef = window._ref(window._db, 'orders/' + currentOrderId);
+  await window._update(orderRef, { rating: selectedRating, ulasan });
+}
+
+/* ══════════════════════════════════════════════
+   TRACKING
+══════════════════════════════════════════════ */
+const STATUS_STEPS = ['Menunggu','Diproses','Pickup','Dicuci','Diantar','Selesai'];
+const STATUS_ICONS = ['⏳','⚙️','🚚','🫧','📦','✅'];
+const STATUS_DESC = [
+  'Pesanan Anda sedang menunggu konfirmasi admin.',
+  'Pesanan diproses, petugas sedang disiapkan.',
+  'Petugas menuju lokasi Anda.',
+  'Pakaian/area sedang dicuci/dibersihkan.',
+  'Pesanan sedang diantar ke lokasi Anda.',
+  'Pesanan selesai. Terima kasih! 🙏',
+];
+
+function trackOrder() {
+  const input = document.getElementById('track-input').value.trim();
+  if (!input) { showToast('Masukkan ID atau nomor WA!','error'); return; }
+  if (!window._firebaseReady) { showToast('Koneksi belum siap','error'); return; }
+
+  document.getElementById('track-result').style.display = 'none';
+  document.getElementById('track-empty').style.display = 'none';
+
+  const ordersRef = window._ref(window._db, 'orders');
+  window._get(ordersRef).then(snap => {
+    if (!snap.exists()) { document.getElementById('track-empty').style.display = 'block'; return; }
+    const data = snap.val();
+    let found = null, foundId = null;
+    for (const [id, o] of Object.entries(data)) {
+      if (id === input || o.wa === input || o.wa.replace(/\D/g,'') === input.replace(/\D/g,'')) {
+        found = o; foundId = id; break;
+      }
+    }
+    if (!found) { document.getElementById('track-empty').style.display = 'block'; return; }
+    renderTrackResult(foundId, found);
+  }).catch(() => showToast('Gagal mengambil data','error'));
+}
+
+function renderTrackResult(id, o) {
+  const curIdx = STATUS_STEPS.indexOf(o.status);
+  let steps = STATUS_STEPS.map((s,i) => {
+    const cls = i < curIdx ? 'done' : (i === curIdx ? 'current' : '');
+    return `<div class="track-step">
+      <div class="track-dot ${cls}">${STATUS_ICONS[i]}</div>
+      <div class="track-info">
+        <h5>${s}</h5>
+        <p>${STATUS_DESC[i]}</p>
+      </div>
+    </div>`;
+  }).join('');
+
+  const html = `
+    <div class="form-card">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;flex-wrap:wrap;gap:12px">
+        <div>
+          <div style="font-size:.8rem;color:var(--gray)">ID Pesanan</div>
+          <div style="font-weight:700;font-size:1rem">${id}</div>
+        </div>
+        <span class="status-badge s-${curIdx+1}">${o.status}</span>
+      </div>
+      <div class="info-box">
+        👤 <strong>${o.name}</strong> | 📱 ${o.wa}<br>
+        🛎️ ${o.serviceType === 'cleaning' ? 'Cleaning — ' + o.detail.jenis : 'Laundry — ' + o.detail.jenis}<br>
+        📅 ${o.date} ${o.time} | 📍 ${o.address}<br>
+        💰 Rp ${o.price?.toLocaleString('id-ID')} | 💳 ${o.payment}
+      </div>
+      <div class="track-timeline">${steps}</div>
+      ${o.status === 'Selesai' && o.rating ? `<div style="margin-top:16px;text-align:center">Rating: ${'★'.repeat(o.rating)}${'☆'.repeat(5-o.rating)} (${o.ulasan || '-'})</div>` : ''}
+    </div>
+  `;
+  document.getElementById('track-result').innerHTML = html;
+  document.getElementById('track-result').style.display = 'block';
+}
+
+/* ══════════════════════════════════════════════
+   ADMIN
+══════════════════════════════════════════════ */
+function adminLogin() {
+  const pw = document.getElementById('admin-pw').value;
+  if (pw === ADMIN_PASSWORD) {
+    adminLoggedIn = true;
+    document.getElementById('admin-login').style.display = 'none';
+    document.getElementById('admin-dashboard').style.display = 'block';
+    loadAdminOrders();
+    showToast('Login berhasil ✓','success');
+  } else {
+    showToast('Password salah!','error');
+  }
+}
+
+function adminLogout() {
+  adminLoggedIn = false;
+  document.getElementById('admin-login').style.display = 'block';
+  document.getElementById('admin-dashboard').style.display = 'none';
+  document.getElementById('admin-pw').value = '';
+}
+
+function loadAdminOrders() {
+  if (!window._firebaseReady) { setTimeout(loadAdminOrders, 500); return; }
+  const ordersRef = window._ref(window._db, 'orders');
+  window._onValue(ordersRef, snap => {
+    allOrders = snap.exists() ? snap.val() : {};
+    updateStats();
+    renderAdminTable();
+  });
+}
+
+function updateStats() {
+  const orders = Object.values(allOrders);
+  document.getElementById('s-total').textContent = orders.length;
+  document.getElementById('s-menunggu').textContent = orders.filter(o => o.status === 'Menunggu').length;
+  document.getElementById('s-proses').textContent = orders.filter(o => ['Diproses','Pickup','Dicuci','Diantar'].includes(o.status)).length;
+  document.getElementById('s-selesai').textContent = orders.filter(o => o.status === 'Selesai').length;
+}
+
+function renderAdminTable() {
+  const fStatus = document.getElementById('filter-status').value;
+  const fType = document.getElementById('filter-type').value;
+  const tbody = document.getElementById('admin-tbody');
+
+  let entries = Object.entries(allOrders);
+  if (fStatus) entries = entries.filter(([,o]) => o.status === fStatus);
+  if (fType) entries = entries.filter(([,o]) => o.serviceType === fType);
+  entries.sort((a,b) => new Date(b[1].createdAt) - new Date(a[1].createdAt));
+
+  if (!entries.length) {
+    tbody.innerHTML = `<tr><td colspan="10" style="text-align:center;padding:32px;color:var(--gray)">Tidak ada pesanan ditemukan</td></tr>`;
+    return;
+  }
+
+  tbody.innerHTML = entries.map(([id, o]) => {
+    const si = STATUS_STEPS.indexOf(o.status);
+    return `<tr>
+      <td style="font-size:.77rem;color:var(--gray);max-width:80px;overflow:hidden;text-overflow:ellipsis" title="${id}">${id.slice(-8)}</td>
+      <td><strong>${o.name}</strong></td>
+      <td><a href="https://wa.me/${o.wa.replace(/\D/g,'')}" target="_blank" style="color:var(--teal)">${o.wa}</a></td>
+      <td><span class="chip ${o.serviceType}">${o.serviceType}</span></td>
+      <td>${o.detail?.jenis || '-'}</td>
+      <td>${o.date} ${o.time}</td>
+      <td>Rp ${(o.price||0).toLocaleString('id-ID')}</td>
+      <td>${o.payment}</td>
+      <td><span class="status-badge s-${si+1}">${o.status}</span></td>
+      <td>
+        <div class="order-actions">
+          <button class="action-btn ab-blue" onclick="openDetail('${id}')">📄</button>
+          ${o.status !== 'Selesai' && o.status !== 'Dibatalkan' ? `<button class="action-btn ab-green" onclick="advanceStatus('${id}')">▶</button>` : ''}
+          ${o.status !== 'Dibatalkan' && o.status !== 'Selesai' ? `<button class="action-btn ab-red" onclick="cancelOrder('${id}')">✕</button>` : ''}
+        </div>
+      </td>
+    </tr>`;
+  }).join('');
+}
+
+const STATUS_NEXT = {
+  'Menunggu':'Diproses','Diproses':'Pickup','Pickup':'Dicuci',
+  'Dicuci':'Diantar','Diantar':'Selesai'
+};
+
+async function advanceStatus(id) {
+  const o = allOrders[id];
+  if (!o) return;
+  const next = STATUS_NEXT[o.status];
+  if (!next) return;
+  await window._update(window._ref(window._db, 'orders/' + id), { status: next });
+  showToast(`Status → ${next}`, 'success');
+}
+
+async function cancelOrder(id) {
+  if (!confirm('Batalkan pesanan ini?')) return;
+  await window._update(window._ref(window._db, 'orders/' + id), { status: 'Dibatalkan' });
+  showToast('Pesanan dibatalkan','error');
+}
+
+function openDetail(id) {
+  const o = allOrders[id];
+  if (!o) return;
+  const si = STATUS_STEPS.indexOf(o.status);
+  document.getElementById('modal-detail-body').innerHTML = `
+    <div class="info-box" style="margin-bottom:16px">
+      <strong>ID:</strong> ${id}<br>
+      👤 <strong>${o.name}</strong> | 📱 ${o.wa}<br>
+      📍 ${o.address}<br>
+      🛎️ ${o.serviceType === 'cleaning' ? 'Cleaning' : 'Laundry'} — ${o.detail?.jenis}<br>
+      ${o.serviceType === 'cleaning' ? `Luas: ${o.detail?.area} m² | Durasi: ${o.detail?.durasi} jam` : `Berat: ${o.detail?.berat} kg | Delivery: ${o.detail?.delivery}`}<br>
+      📅 ${o.date} ${o.time}<br>
+      💰 Rp ${(o.price||0).toLocaleString('id-ID')} | 💳 ${o.payment}<br>
+      📝 ${o.notes || '-'}<br>
+      ⭐ Rating: ${o.rating ? '★'.repeat(o.rating) : '-'} ${o.ulasan ? `(${o.ulasan})` : ''}<br>
+      🕒 Dibuat: ${new Date(o.createdAt).toLocaleString('id-ID')}<br>
+      <br>Status: <span class="status-badge s-${si+1}">${o.status}</span>
+    </div>
+    <div class="form-group">
+      <label>Update Status</label>
+      <select id="detail-status">
+        ${['Menunggu','Diproses','Pickup','Dicuci','Diantar','Selesai','Dibatalkan'].map(s => `<option value="${s}" ${o.status===s?'selected':''}>${s}</option>`).join('')}
+      </select>
+    </div>
+  `;
+  document.getElementById('modal-detail-actions').innerHTML = `
+    <button class="btn btn-primary" style="flex:1" onclick="saveDetailStatus('${id}')">💾 Simpan Status</button>
+    <a href="https://wa.me/${o.wa.replace(/\D/g,'')}" target="_blank" class="btn btn-secondary" style="flex:1;text-decoration:none">💬 WA Pelanggan</a>
+  `;
+  openModal('modal-detail');
+}
+
+async function saveDetailStatus(id) {
+  const newStatus = document.getElementById('detail-status').value;
+  await window._update(window._ref(window._db, 'orders/' + id), { status: newStatus });
+  closeModal('modal-detail');
+  showToast('Status diperbarui ✓','success');
+}
+
+function exportCSV() {
+  const rows = [['ID','Nama','WA','Layanan','Jenis','Tanggal','Jam','Alamat','Harga','Bayar','Status','Rating','Ulasan']];
+  Object.entries(allOrders).forEach(([id,o]) => {
+    rows.push([id,o.name,o.wa,o.serviceType,o.detail?.jenis||'',o.date,o.time,o.address||'',o.price||0,o.payment,o.status,o.rating||0,o.ulasan||'']);
+  });
+  const csv = rows.map(r => r.map(v => `"${String(v).replace(/"/g,'""')}"`).join(',')).join('\n');
+  const blob = new Blob([csv], { type: 'text/csv' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'bantuin_orders_' + new Date().toISOString().split('T')[0] + '.csv';
+  a.click();
+  showToast('CSV berhasil diunduh!','success');
+}
+
+/* ══════════════════════════════════════════════
+   MODAL & TOAST
+══════════════════════════════════════════════ */
+function openModal(id) { document.getElementById(id).classList.add('open'); }
+function closeModal(id) {
+  document.getElementById(id).classList.remove('open');
+  if (id === 'modal-success' && selectedRating) saveRating();
+}
+
+let toastTimer;
+function showToast(msg, type='') {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.className = 'show ' + type;
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => t.className = '', 3000);
+}
+
+/* ══════════════════════════════════════════════
+   WHATSAPP
+══════════════════════════════════════════════ */
+function openWhatsApp() {
+  window.open('https://wa.me/6282117903982?text=Halo+Bantu.IN,+saya+ingin+memesan+layanan', '_blank');
+}
+
+/* ══════════════════════════════════════════════
+   CLOSE OVERLAY ON CLICK OUTSIDE
+══════════════════════════════════════════════ */
+document.querySelectorAll('.overlay').forEach(ov => {
+  ov.addEventListener('click', e => { if (e.target === ov) closeModal(ov.id); });
+});
+
+/* ══════════════════════════════════════════════
+   FIREBASE READY CHECK
+══════════════════════════════════════════════ */
+document.addEventListener('firebaseReady', () => {
+  console.log('✅ Firebase connected');
+});
+</script>
+</body>
+</html>
