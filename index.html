@@ -1,47 +1,73 @@
 <!DOCTYPE html>
 <html lang="id">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Bantu.IN – Cleaning Service & Laundry</title>
-  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Syne:wght@700;800&display=swap" rel="stylesheet" />
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover"/>
+  <meta name="mobile-web-app-capable" content="yes"/>
+  <meta name="apple-mobile-web-app-capable" content="yes"/>
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"/>
+  <meta name="apple-mobile-web-app-title" content="Bantu.IN"/>
+  <meta name="theme-color" content="#0BB8D4"/>
+  <meta name="description" content="Cleaning Service & Laundry profesional – pesan mudah, bersih pasti!"/>
+  <title>Bantu.IN – Cleaning & Laundry</title>
+
+  <!-- PWA Icons (inline SVG as data URI agar 1 file) -->
+  <link rel="apple-touch-icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 192 192'%3E%3Crect width='192' height='192' rx='40' fill='%230BB8D4'/%3E%3Ctext x='96' y='130' font-size='100' text-anchor='middle'%3E🧹%3C/text%3E%3C/svg%3E"/>
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%230BB8D4'/%3E%3Ctext x='16' y='24' font-size='20' text-anchor='middle'%3E🧹%3C/text%3E%3C/svg%3E"/>
+
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Syne:wght@700;800&display=swap" rel="stylesheet"/>
 
   <!-- Firebase SDK -->
   <script type="module">
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-    import { getDatabase, ref, push, set, onValue, update, get } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
+    import { initializeApp }        from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+    import { getDatabase, ref, push, set, onValue, update, get }
+                                    from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
+    import { getMessaging, getToken, onMessage }
+                                    from "https://www.gstatic.com/firebasejs/10.12.2/firebase-messaging.js";
 
     const firebaseConfig = {
-      apiKey: "AIzaSyCboRDjQ60i5oPi_x8oxVgaO1Y2JPbtnwc",
-      authDomain: "bantuin-bb3de.firebaseapp.com",
-      databaseURL: "https://bantuin-bb3de-default-rtdb.asia-southeast1.firebasedatabase.app",
-      projectId: "bantuin-bb3de",
-      storageBucket: "bantuin-bb3de.firebasestorage.app",
+      apiKey:            "AIzaSyCboRDjQ60i5oPi_x8oxVgaO1Y2JPbtnwc",
+      authDomain:        "bantuin-bb3de.firebaseapp.com",
+      databaseURL:       "https://bantuin-bb3de-default-rtdb.asia-southeast1.firebasedatabase.app",
+      projectId:         "bantuin-bb3de",
+      storageBucket:     "bantuin-bb3de.firebasestorage.app",
       messagingSenderId: "786715492515",
-      appId: "1:786715492515:web:d3a97c5be8d6b6cd9cff16",
-      measurementId: "G-9B5ERJWVJZ"
+      appId:             "1:786715492515:web:d3a97c5be8d6b6cd9cff16",
+      measurementId:     "G-9B5ERJWVJZ"
     };
 
     const app = initializeApp(firebaseConfig);
-    const db = getDatabase(app);
+    const db  = getDatabase(app);
 
-    // Expose globally
-    window._db = db;
-    window._ref = ref;
-    window._push = push;
-    window._set = set;
+    window._db      = db;
+    window._ref     = ref;
+    window._push    = push;
+    window._set     = set;
     window._onValue = onValue;
-    window._update = update;
-    window._get = get;
+    window._update  = update;
+    window._get     = get;
+
+    // FCM – hanya aktif jika browser support
+    try {
+      const messaging = getMessaging(app);
+      window._messaging = messaging;
+
+      // Tampilkan in-app notification saat foreground
+      onMessage(messaging, payload => {
+        const { title, body } = payload.notification || {};
+        showInAppNotif(title || 'Bantu.IN', body || '');
+      });
+    } catch(e) { /* browser tidak support FCM */ }
+
     window._firebaseReady = true;
     document.dispatchEvent(new Event("firebaseReady"));
   </script>
 
   <style>
+    /* ══ VARIABLES ══ */
     :root {
-      
-      
       --teal:   #0BB8D4;
+      --teal2:  #0FA6C0;
       --green:  #25C07A;
       --orange: #FF6B2C;
       --navy:   #0D1B3E;
@@ -51,339 +77,540 @@
       --border: #D8EAF5;
       --shadow: 0 4px 24px rgba(13,27,62,.10);
       --radius: 16px;
+      /* safe area for iPhone notch & home bar */
+      --sat: env(safe-area-inset-top,    0px);
+      --sab: env(safe-area-inset-bottom, 0px);
+      --sal: env(safe-area-inset-left,   0px);
+      --sar: env(safe-area-inset-right,  0px);
+      --bottom-nav-h: 68px;
     }
 
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
-    body {
+    html, body {
       font-family: 'Plus Jakarta Sans', sans-serif;
       background: var(--light);
       color: var(--navy);
       min-height: 100vh;
+      overscroll-behavior-y: contain; /* prevents browser bounce interfering */
+      -webkit-tap-highlight-color: transparent;
     }
 
-    /* ─── TOPBAR ─── */
+    /* ══ SPLASH SCREEN ══ */
+    #splash {
+      position: fixed; inset: 0; z-index: 9999;
+      background: linear-gradient(160deg, var(--navy) 0%, #1a3a6e 55%, var(--teal) 100%);
+      display: flex; flex-direction: column;
+      align-items: center; justify-content: center; gap: 20px;
+      transition: opacity .5s, transform .5s;
+    }
+    #splash.hide { opacity: 0; transform: scale(1.05); pointer-events: none; }
+    .splash-logo {
+      font-family: 'Syne', sans-serif; font-size: 3rem; font-weight: 800; color: #fff;
+      letter-spacing: -1px;
+    }
+    .splash-logo span { color: var(--orange); }
+    .splash-tagline { color: rgba(255,255,255,.75); font-size: .95rem; }
+    .splash-spinner {
+      width: 40px; height: 40px; border: 4px solid rgba(255,255,255,.25);
+      border-top-color: #fff; border-radius: 50%;
+      animation: spin .8s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* ══ TOP STATUS BAR (iOS safe area) ══ */
+    .status-bar-spacer {
+      height: var(--sat);
+      background: var(--white);
+    }
+
+    /* ══ TOPBAR ══ */
     .topbar {
-      position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+      position: sticky; top: 0; z-index: 100;
       background: var(--white);
       border-bottom: 1.5px solid var(--border);
       display: flex; align-items: center; justify-content: space-between;
-      padding: 0 32px; height: 64px;
+      padding: 0 20px; height: 56px;
       box-shadow: 0 2px 12px rgba(13,27,62,.06);
     }
-    .logo { font-family: 'Syne', sans-serif; font-size: 1.5rem; font-weight: 800; color: var(--teal); }
+    .logo { font-family: 'Syne', sans-serif; font-size: 1.4rem; font-weight: 800; color: var(--teal); }
     .logo span { color: var(--orange); }
-    .nav-links { display: flex; gap: 8px; }
-    .nav-btn {
+    .topbar-right { display: flex; gap: 4px; }
+    .icon-btn {
       background: none; border: none; cursor: pointer;
-      padding: 8px 18px; border-radius: 8px;
-      font-family: inherit; font-size: .9rem; font-weight: 600; color: var(--navy);
-      transition: background .2s, color .2s;
+      width: 40px; height: 40px; border-radius: 10px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 1.2rem; transition: background .15s;
     }
-    .nav-btn:hover, .nav-btn.active { background: var(--teal); color: #fff; }
-    .nav-btn.admin-btn { color: var(--orange); }
-    .nav-btn.admin-btn:hover { background: var(--orange); color: #fff; }
+    .icon-btn:hover, .icon-btn:active { background: var(--light); }
+    /* hide desktop nav on mobile handled below */
+    .desktop-nav { display: flex; gap: 4px; }
 
-    /* ─── MAIN LAYOUT ─── */
-    .main { margin-top: 64px; }
+    /* ══ MAIN CONTENT ══ */
+    .main {
+      padding-bottom: calc(var(--bottom-nav-h) + var(--sab) + 8px);
+      min-height: calc(100vh - 56px - var(--sat));
+    }
 
-    /* ─── PAGES ─── */
+    /* ══ PAGES ══ */
     .page { display: none; }
-    .page.active { display: block; }
+    .page.active { display: block; animation: fadeIn .22s ease; }
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
 
-    /* ─── HERO ─── */
+    /* ══ BOTTOM NAV (mobile) ══ */
+    .bottom-nav {
+      position: fixed; bottom: 0; left: 0; right: 0; z-index: 100;
+      background: var(--white);
+      border-top: 1.5px solid var(--border);
+      display: flex;
+      height: calc(var(--bottom-nav-h) + var(--sab));
+      padding-bottom: var(--sab);
+      box-shadow: 0 -4px 20px rgba(13,27,62,.08);
+    }
+    .bnav-btn {
+      flex: 1; display: flex; flex-direction: column;
+      align-items: center; justify-content: center; gap: 4px;
+      border: none; background: none; cursor: pointer;
+      font-family: inherit; font-size: .68rem; font-weight: 600;
+      color: var(--gray); transition: color .2s; padding: 0;
+      -webkit-tap-highlight-color: transparent;
+    }
+    .bnav-btn .bn-icon { font-size: 1.45rem; transition: transform .2s; }
+    .bnav-btn.active { color: var(--teal); }
+    .bnav-btn.active .bn-icon { transform: scale(1.15); }
+    .bnav-btn.active-orange { color: var(--orange); }
+    .bnav-btn.active-orange .bn-icon { transform: scale(1.15); }
+
+    /* badge on bottom nav */
+    .bnav-wrap { position: relative; display: inline-block; }
+    .bnav-badge {
+      position: absolute; top: -4px; right: -8px;
+      background: var(--orange); color: #fff;
+      font-size: .6rem; font-weight: 800;
+      padding: 1px 5px; border-radius: 10px;
+      display: none;
+    }
+    .bnav-badge.show { display: block; }
+
+    /* ══ PULL TO REFRESH ══ */
+    #ptr-indicator {
+      text-align: center; padding: 12px; font-size: .85rem;
+      color: var(--teal); font-weight: 600;
+      height: 0; overflow: hidden; transition: height .2s;
+    }
+    #ptr-indicator.visible { height: 44px; }
+
+    /* ══ HERO ══ */
     .hero {
       background: linear-gradient(135deg, var(--navy) 0%, #1a3a6e 60%, #0BB8D4 100%);
-      color: #fff; text-align: center; padding: 80px 20px 60px;
+      color: #fff; text-align: center; padding: 44px 20px 36px;
       position: relative; overflow: hidden;
     }
     .hero::before {
-      content: ''; position: absolute; inset: 0;
+      content:''; position:absolute; inset:0;
       background: radial-gradient(ellipse at 70% 30%, rgba(11,184,212,.25) 0%, transparent 60%);
     }
-    .hero h1 { font-family: 'Syne', sans-serif; font-size: clamp(2rem,5vw,3.6rem); font-weight: 800; line-height: 1.1; position: relative; }
-    .hero h1 span { color: #0BB8D4; }
-    .hero p { margin: 16px auto 32px; max-width: 560px; opacity: .85; font-size: 1.05rem; line-height: 1.6; position: relative; }
-    .hero-btns { display: flex; gap: 16px; justify-content: center; flex-wrap: wrap; position: relative; }
-    .btn { display: inline-flex; align-items: center; gap: 8px; padding: 14px 30px; border-radius: 12px; font-family: inherit; font-size: 1rem; font-weight: 700; border: none; cursor: pointer; transition: transform .15s, box-shadow .15s; }
-    .btn:hover { transform: translateY(-2px); box-shadow: 0 8px 24px rgba(0,0,0,.2); }
-    .btn-primary { background: var(--teal); color: #fff; }
-    .btn-secondary { background: var(--orange); color: #fff; }
-    .btn-outline { background: transparent; border: 2px solid #fff; color: #fff; }
+    .hero h1 {
+      font-family: 'Syne', sans-serif;
+      font-size: clamp(1.7rem,6vw,3.2rem);
+      font-weight: 800; line-height: 1.15; position: relative;
+    }
+    .hero h1 span { color: #52E5FA; }
+    .hero p { margin: 12px auto 24px; max-width: 440px; opacity: .85; font-size: .95rem; line-height: 1.6; position: relative; }
+    .hero-btns { display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; position: relative; }
 
-    /* ─── SERVICE CARDS ─── */
-    .section { padding: 56px 24px; max-width: 1100px; margin: 0 auto; }
-    .section-title { font-family: 'Syne', sans-serif; font-size: 1.9rem; font-weight: 800; margin-bottom: 8px; }
-    .section-sub { color: var(--gray); margin-bottom: 36px; font-size: .95rem; }
-    .cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 24px; }
+    /* ══ BUTTONS ══ */
+    .btn {
+      display: inline-flex; align-items: center; gap: 8px;
+      padding: 13px 24px; border-radius: 12px;
+      font-family: inherit; font-size: .95rem; font-weight: 700;
+      border: none; cursor: pointer;
+      transition: transform .12s, box-shadow .12s, opacity .12s;
+      -webkit-tap-highlight-color: transparent;
+      user-select: none;
+    }
+    .btn:active { transform: scale(.96); opacity: .9; }
+    .btn-primary  { background: var(--teal);   color: #fff; }
+    .btn-secondary{ background: var(--orange); color: #fff; }
+    .btn-outline  { background: transparent; border: 2px solid #fff; color: #fff; }
+    .btn-ghost    { background: var(--light); color: var(--navy); }
+
+    /* ══ SECTION ══ */
+    .section { padding: 28px 16px; max-width: 760px; margin: 0 auto; }
+    .section-title { font-family: 'Syne', sans-serif; font-size: 1.5rem; font-weight: 800; margin-bottom: 4px; }
+    .section-sub   { color: var(--gray); margin-bottom: 20px; font-size: .88rem; }
+
+    /* ══ SERVICE CARDS – horizontal scroll on mobile ══ */
+    .cards-scroll {
+      display: flex; gap: 14px;
+      overflow-x: auto; scroll-snap-type: x mandatory;
+      padding-bottom: 8px; scrollbar-width: none;
+    }
+    .cards-scroll::-webkit-scrollbar { display: none; }
     .card {
-      background: var(--white); border-radius: var(--radius); padding: 32px;
+      background: var(--white); border-radius: var(--radius); padding: 24px 20px;
       box-shadow: var(--shadow); border: 1.5px solid var(--border);
-      transition: transform .2s, box-shadow .2s;
+      min-width: 240px; scroll-snap-align: start; flex-shrink: 0;
     }
-    .card:hover { transform: translateY(-4px); box-shadow: 0 12px 32px rgba(13,27,62,.13); }
-    .card-icon { font-size: 2.5rem; margin-bottom: 16px; }
-    .card h3 { font-size: 1.2rem; font-weight: 700; margin-bottom: 8px; }
-    .card p { color: var(--gray); font-size: .9rem; line-height: 1.6; }
-    .card .card-cta { margin-top: 20px; }
+    .card-icon { font-size: 2rem; margin-bottom: 12px; }
+    .card h3 { font-size: 1.05rem; font-weight: 700; margin-bottom: 6px; }
+    .card p { color: var(--gray); font-size: .83rem; line-height: 1.55; }
+    .card .card-cta { margin-top: 16px; }
 
-    /* ─── STATUS BADGE ─── */
+    /* ══ QUICK ACTION GRID ══ */
+    .quick-grid {
+      display: grid; grid-template-columns: repeat(4,1fr); gap: 12px;
+      margin-bottom: 8px;
+    }
+    .quick-btn {
+      display: flex; flex-direction: column; align-items: center; gap: 6px;
+      background: var(--white); border-radius: 14px; padding: 14px 6px;
+      border: 1.5px solid var(--border); cursor: pointer; font-family: inherit;
+      font-size: .72rem; font-weight: 700; color: var(--navy);
+      box-shadow: 0 2px 8px rgba(13,27,62,.06);
+      transition: transform .15s; -webkit-tap-highlight-color: transparent;
+    }
+    .quick-btn:active { transform: scale(.95); }
+    .quick-btn .qi { font-size: 1.6rem; }
+
+    /* ══ STATUS BADGE ══ */
     .status-badge {
-      display: inline-flex; align-items: center; gap: 6px;
-      padding: 4px 12px; border-radius: 20px; font-size: .78rem; font-weight: 700;
+      display: inline-flex; align-items: center; gap: 5px;
+      padding: 4px 11px; border-radius: 20px; font-size: .75rem; font-weight: 700;
     }
-    .s-1 { background: #FFF3CD; color: #8B6914; }
-    .s-2 { background: #CCE5FF; color: #004085; }
-    .s-3 { background: #D4EDDA; color: #155724; }
-    .s-4 { background: #D1ECF1; color: #0c5460; }
-    .s-5 { background: #D6D8FF; color: #2E2EAA; }
-    .s-6 { background: #C3E6CB; color: #155724; }
-    .s-7 { background: #F8D7DA; color: #721c24; }
+    .s-1 { background:#FFF3CD; color:#8B6914; }
+    .s-2 { background:#CCE5FF; color:#004085; }
+    .s-3 { background:#D4EDDA; color:#155724; }
+    .s-4 { background:#D1ECF1; color:#0c5460; }
+    .s-5 { background:#D6D8FF; color:#2E2EAA; }
+    .s-6 { background:#C3E6CB; color:#155724; }
+    .s-7 { background:#F8D7DA; color:#721c24; }
 
-    /* ─── FORM ─── */
+    /* ══ FORM CARD ══ */
     .form-card {
-      background: var(--white); border-radius: var(--radius); padding: 40px;
+      background: var(--white); border-radius: var(--radius); padding: 24px 18px;
       box-shadow: var(--shadow); border: 1.5px solid var(--border);
-      max-width: 680px; margin: 0 auto;
+      max-width: 640px; margin: 0 auto;
     }
-    .form-title { font-family: 'Syne', sans-serif; font-size: 1.5rem; font-weight: 800; margin-bottom: 24px; }
-    .form-group { margin-bottom: 20px; }
-    .form-group label { display: block; font-size: .85rem; font-weight: 600; margin-bottom: 6px; color: var(--navy); }
+    .form-title { font-family: 'Syne', sans-serif; font-size: 1.25rem; font-weight: 800; margin-bottom: 20px; }
+    .form-group { margin-bottom: 16px; }
+    .form-group label { display: block; font-size: .8rem; font-weight: 700; margin-bottom: 6px; color: var(--navy); }
     .form-group input, .form-group select, .form-group textarea {
-      width: 100%; padding: 12px 16px; border-radius: 10px;
-      border: 1.5px solid var(--border); font-family: inherit; font-size: .95rem;
+      width: 100%; padding: 13px 15px; border-radius: 10px;
+      border: 1.5px solid var(--border); font-family: inherit; font-size: 1rem;
       background: var(--light); color: var(--navy); transition: border-color .2s;
+      /* Prevent iOS zoom on focus (font-size >= 16px) */
     }
     .form-group input:focus, .form-group select:focus, .form-group textarea:focus {
       outline: none; border-color: var(--teal); background: #fff;
     }
-    .form-group textarea { min-height: 90px; resize: vertical; }
-    .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+    .form-group textarea { min-height: 80px; resize: vertical; }
+    .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
     .price-display {
-      background: linear-gradient(135deg, var(--teal), #0FA6C0);
-      color: #fff; border-radius: 12px; padding: 16px 20px;
+      background: linear-gradient(135deg, var(--teal), var(--teal2));
+      color: #fff; border-radius: 12px; padding: 14px 18px;
       display: flex; justify-content: space-between; align-items: center;
-      margin: 24px 0; font-weight: 700;
+      margin: 20px 0; font-weight: 700;
     }
-    .price-display .amount { font-size: 1.6rem; }
+    .price-display .amount { font-size: 1.5rem; }
     .form-step { display: none; }
     .form-step.active { display: block; }
-    .step-indicator { display: flex; gap: 8px; margin-bottom: 28px; }
-    .step-dot { width: 10px; height: 10px; border-radius: 50%; background: var(--border); transition: background .3s; }
+    .step-indicator { display: flex; gap: 6px; margin-bottom: 14px; }
+    .step-dot { height: 4px; flex: 1; border-radius: 2px; background: var(--border); transition: background .3s; }
     .step-dot.done { background: var(--teal); }
 
-    /* ─── ORDER LIST ─── */
-    .order-list { display: flex; flex-direction: column; gap: 16px; }
-    .order-item {
-      background: var(--white); border-radius: 12px; padding: 20px 24px;
-      border: 1.5px solid var(--border); box-shadow: 0 2px 8px rgba(13,27,62,.06);
-      display: flex; align-items: center; justify-content: space-between; gap: 16px; flex-wrap: wrap;
+    /* ══ SERVICE TYPE BTNS ══ */
+    .service-type-btns { display: flex; gap: 12px; margin-bottom: 20px; }
+    .service-type-btn {
+      flex: 1; padding: 18px 12px; border-radius: 14px;
+      border: 2px solid var(--border); background: var(--white);
+      cursor: pointer; font-family: inherit; font-weight: 700;
+      font-size: .95rem; color: var(--navy); transition: all .2s;
+      text-align: center; -webkit-tap-highlight-color: transparent;
     }
-    .order-meta h4 { font-size: 1rem; font-weight: 700; }
-    .order-meta p { font-size: .82rem; color: var(--gray); margin-top: 4px; }
-    .order-actions { display: flex; gap: 8px; flex-wrap: wrap; }
-    .action-btn {
-      padding: 7px 16px; border-radius: 8px; font-family: inherit; font-size: .82rem;
-      font-weight: 600; border: none; cursor: pointer; transition: opacity .2s;
-    }
-    .action-btn:hover { opacity: .85; }
-    .ab-blue { background: #CCE5FF; color: #004085; }
-    .ab-green { background: #C3E6CB; color: #155724; }
-    .ab-orange { background: #FFE0CC; color: #7A3000; }
-    .ab-red { background: #F8D7DA; color: #721c24; }
+    .service-type-btn.selected { border-color: var(--teal); background: #EEF9FC; color: var(--teal); }
+    .service-type-btn .icon { font-size: 1.7rem; display: block; margin-bottom: 6px; }
 
-    /* ─── TRACKING ─── */
-    .track-wrap { max-width: 560px; margin: 0 auto; }
-    .track-timeline { margin-top: 24px; }
+    /* ══ TRACK TIMELINE ══ */
     .track-step {
-      display: flex; gap: 16px; align-items: flex-start; padding-bottom: 24px;
-      position: relative;
+      display: flex; gap: 14px; align-items: flex-start; padding-bottom: 20px; position: relative;
     }
     .track-step::before {
-      content: ''; position: absolute; left: 17px; top: 36px; bottom: 0;
-      width: 2px; background: var(--border);
+      content:''; position:absolute; left:17px; top:36px; bottom:0;
+      width:2px; background: var(--border);
     }
-    .track-step:last-child::before { display: none; }
+    .track-step:last-child::before { display:none; }
     .track-dot {
-      width: 36px; height: 36px; border-radius: 50%; flex-shrink: 0;
-      display: flex; align-items: center; justify-content: center;
-      font-size: 1rem; background: var(--border); color: var(--gray);
+      width:36px; height:36px; border-radius:50%; flex-shrink:0;
+      display:flex; align-items:center; justify-content:center;
+      font-size:.95rem; background: var(--border); color: var(--gray);
     }
-    .track-dot.done { background: var(--teal); color: #fff; }
-    .track-dot.current { background: var(--orange); color: #fff; box-shadow: 0 0 0 4px rgba(255,107,44,.2); }
-    .track-info h5 { font-weight: 700; font-size: .95rem; }
-    .track-info p { font-size: .82rem; color: var(--gray); margin-top: 2px; }
+    .track-dot.done    { background: var(--teal);   color:#fff; }
+    .track-dot.current { background: var(--orange); color:#fff; box-shadow: 0 0 0 4px rgba(255,107,44,.2); }
+    .track-info h5 { font-weight: 700; font-size: .9rem; }
+    .track-info p  { font-size: .8rem; color: var(--gray); margin-top: 2px; }
 
-    /* ─── ADMIN DASHBOARD ─── */
+    /* ══ ADMIN ══ */
     .admin-header {
-      background: var(--navy); color: #fff; padding: 28px 32px;
-      display: flex; align-items: center; justify-content: space-between; gap: 16px; flex-wrap: wrap;
+      background: var(--navy); color:#fff; padding: 20px 16px;
+      display:flex; align-items:center; justify-content:space-between; gap:12px; flex-wrap:wrap;
     }
-    .admin-header h2 { font-family: 'Syne', sans-serif; font-size: 1.4rem; font-weight: 800; }
-    .stats-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 16px; padding: 24px 32px; }
+    .admin-header h2 { font-family:'Syne',sans-serif; font-size:1.2rem; font-weight:800; }
+    .stats-row {
+      display:grid; grid-template-columns: repeat(2,1fr); gap:12px;
+      padding:16px;
+    }
     .stat-card {
-      background: var(--white); border-radius: 12px; padding: 20px;
-      border: 1.5px solid var(--border); text-align: center;
+      background:var(--white); border-radius:12px; padding:16px;
+      border:1.5px solid var(--border); text-align:center;
     }
-    .stat-card .num { font-family: 'Syne', sans-serif; font-size: 2rem; font-weight: 800; color: var(--teal); }
-    .stat-card .label { font-size: .8rem; color: var(--gray); margin-top: 4px; font-weight: 600; }
-    .filter-row { padding: 0 32px 16px; display: flex; gap: 12px; flex-wrap: wrap; align-items: center; }
-    .filter-select { padding: 8px 14px; border-radius: 8px; border: 1.5px solid var(--border); font-family: inherit; font-size: .87rem; background: var(--white); }
-    .admin-table-wrap { padding: 0 32px 32px; overflow-x: auto; }
-    .admin-table { width: 100%; border-collapse: collapse; font-size: .88rem; }
-    .admin-table th { background: var(--light); padding: 12px 14px; text-align: left; font-weight: 700; border-bottom: 2px solid var(--border); white-space: nowrap; }
-    .admin-table td { padding: 12px 14px; border-bottom: 1px solid var(--border); vertical-align: middle; }
-    .admin-table tr:hover td { background: #F0F8FC; }
+    .stat-card .num   { font-family:'Syne',sans-serif; font-size:1.8rem; font-weight:800; color:var(--teal); }
+    .stat-card .label { font-size:.75rem; color:var(--gray); margin-top:4px; font-weight:600; }
+    .filter-row { padding:0 16px 12px; display:flex; gap:8px; flex-wrap:wrap; }
+    .filter-select {
+      padding:8px 12px; border-radius:8px; border:1.5px solid var(--border);
+      font-family:inherit; font-size:.85rem; background:var(--white);
+      flex:1; min-width: 120px;
+    }
+    .admin-table-wrap { padding:0 16px 120px; overflow-x:auto; }
+    .admin-table { width:100%; border-collapse:collapse; font-size:.82rem; }
+    .admin-table th { background:var(--light); padding:10px 12px; text-align:left; font-weight:700; border-bottom:2px solid var(--border); white-space:nowrap; }
+    .admin-table td { padding:10px 12px; border-bottom:1px solid var(--border); vertical-align:middle; }
+    .admin-table tr:active td { background:#F0F8FC; }
 
-    /* ─── RATING ─── */
-    .stars { display: flex; gap: 4px; font-size: 1.8rem; cursor: pointer; }
-    .star { color: var(--border); transition: color .15s; }
-    .star.lit { color: #FFBA08; }
+    /* ══ ACTION BTNS ══ */
+    .action-btn {
+      padding:7px 13px; border-radius:8px; font-family:inherit; font-size:.8rem;
+      font-weight:600; border:none; cursor:pointer;
+      -webkit-tap-highlight-color:transparent;
+    }
+    .ab-blue   { background:#CCE5FF; color:#004085; }
+    .ab-green  { background:#C3E6CB; color:#155724; }
+    .ab-red    { background:#F8D7DA; color:#721c24; }
 
-    /* ─── WHATSAPP NOTIF ─── */
+    /* ══ ORDER ACTIONS ══ */
+    .order-actions { display:flex; gap:6px; flex-wrap:wrap; }
+
+    /* ══ CHIP ══ */
+    .chip { display:inline-block; padding:2px 8px; border-radius:6px; font-size:.72rem; font-weight:700; background:var(--light); color:var(--navy); }
+    .chip.cleaning { background:#DBEAFE; color:#1E40AF; }
+    .chip.laundry  { background:#D1FAE5; color:#065F46; }
+
+    /* ══ STARS ══ */
+    .stars { display:flex; gap:4px; font-size:1.7rem; cursor:pointer; }
+    .star { color:var(--border); transition:color .12s; }
+    .star.lit { color:#FFBA08; }
+
+    /* ══ WA BUBBLE ══ */
     .wa-bubble {
-      background: #E7FFDB; border-radius: 12px; padding: 14px 18px;
-      font-size: .87rem; color: #1A3300; line-height: 1.6;
-      border: 1px solid #C3F0A5; max-width: 380px;
-      font-family: -apple-system, BlinkMacSystemFont, sans-serif;
+      background:#E7FFDB; border-radius:12px; padding:13px 16px;
+      font-size:.85rem; color:#1A3300; line-height:1.6;
+      border:1px solid #C3F0A5; max-width:340px; margin:0 auto;
     }
-    .wa-bubble .wa-header { font-weight: 700; margin-bottom: 6px; color: #128C7E; }
+    .wa-bubble .wa-header { font-weight:700; margin-bottom:5px; color:#128C7E; }
 
-    /* ─── MODALS ─── */
+    /* ══ MODALS ══ */
     .overlay {
-      position: fixed; inset: 0; background: rgba(13,27,62,.55);
-      display: flex; align-items: center; justify-content: center; z-index: 200;
-      padding: 20px; backdrop-filter: blur(2px);
-      opacity: 0; pointer-events: none; transition: opacity .2s;
+      position:fixed; inset:0; background:rgba(13,27,62,.55);
+      display:flex; align-items:flex-end; justify-content:center;
+      z-index:500; padding:0;
+      opacity:0; pointer-events:none; transition:opacity .2s;
     }
-    .overlay.open { opacity: 1; pointer-events: auto; }
+    .overlay.open { opacity:1; pointer-events:auto; }
+    /* Bottom sheet on mobile */
     .modal {
-      background: var(--white); border-radius: 20px; padding: 36px;
-      max-width: 520px; width: 100%; max-height: 90vh; overflow-y: auto;
-      box-shadow: 0 24px 60px rgba(13,27,62,.22);
-      transform: translateY(20px); transition: transform .25s;
+      background:var(--white); border-radius:20px 20px 0 0; padding:28px 20px;
+      width:100%; max-height:90vh; overflow-y:auto;
+      box-shadow:0 -8px 40px rgba(13,27,62,.18);
+      transform:translateY(100%); transition:transform .28s cubic-bezier(.32,.72,0,1);
+      padding-bottom:calc(20px + var(--sab));
     }
-    .overlay.open .modal { transform: translateY(0); }
-    .modal-title { font-family: 'Syne', sans-serif; font-size: 1.3rem; font-weight: 800; margin-bottom: 24px; }
-    .modal-close { float: right; background: none; border: none; font-size: 1.4rem; cursor: pointer; color: var(--gray); }
+    .overlay.open .modal { transform:translateY(0); }
+    .modal-drag {
+      width:40px; height:4px; border-radius:2px; background:var(--border);
+      margin:0 auto 20px;
+    }
+    .modal-title { font-family:'Syne',sans-serif; font-size:1.2rem; font-weight:800; margin-bottom:20px; }
+    .modal-close { float:right; background:none; border:none; font-size:1.3rem; cursor:pointer; color:var(--gray); }
 
-    /* ─── TOAST ─── */
+    /* ══ TOAST ══ */
     #toast {
-      position: fixed; bottom: 28px; right: 28px; z-index: 999;
-      background: var(--navy); color: #fff; padding: 14px 22px; border-radius: 12px;
-      font-size: .9rem; font-weight: 600; box-shadow: 0 8px 24px rgba(0,0,0,.2);
-      transform: translateY(80px); opacity: 0; transition: all .3s;
+      position:fixed; bottom:calc(var(--bottom-nav-h) + var(--sab) + 12px); left:50%;
+      transform:translateX(-50%) translateY(80px);
+      background:var(--navy); color:#fff; padding:12px 20px; border-radius:12px;
+      font-size:.88rem; font-weight:600; box-shadow:0 6px 20px rgba(0,0,0,.2);
+      white-space:nowrap; opacity:0; transition:all .28s; z-index:800;
     }
-    #toast.show { transform: translateY(0); opacity: 1; }
-    #toast.success { background: var(--green); }
-    #toast.error { background: #DC3545; }
+    #toast.show { transform:translateX(-50%) translateY(0); opacity:1; }
+    #toast.success { background:var(--green); }
+    #toast.error   { background:#DC3545; }
 
-    /* ─── EMPTY STATE ─── */
-    .empty { text-align: center; padding: 60px 20px; color: var(--gray); }
-    .empty .icon { font-size: 3rem; margin-bottom: 12px; }
+    /* ══ IN-APP NOTIFICATION ══ */
+    #inapp-notif {
+      position:fixed; top:calc(var(--sat) + 64px); left:12px; right:12px; z-index:700;
+      background:var(--navy); color:#fff; border-radius:14px;
+      padding:14px 16px; display:flex; gap:12px; align-items:flex-start;
+      box-shadow:0 8px 28px rgba(13,27,62,.25);
+      transform:translateY(-120%); opacity:0; transition:all .3s;
+    }
+    #inapp-notif.show { transform:translateY(0); opacity:1; }
+    #inapp-notif .notif-icon { font-size:1.4rem; flex-shrink:0; }
+    #inapp-notif .notif-body h5 { font-weight:700; font-size:.9rem; }
+    #inapp-notif .notif-body p  { font-size:.8rem; opacity:.8; margin-top:2px; }
+    #inapp-notif .notif-close { margin-left:auto; background:none; border:none; color:#fff; cursor:pointer; font-size:1rem; }
 
-    /* ─── RESPONSIVE ─── */
-    @media (max-width: 600px) {
-      .topbar { padding: 0 16px; }
-      .form-card { padding: 24px 18px; }
-      .form-row { grid-template-columns: 1fr; }
-      .admin-header, .stats-row, .filter-row, .admin-table-wrap { padding-left: 16px; padding-right: 16px; }
+    /* ══ EMPTY ══ */
+    .empty { text-align:center; padding:48px 20px; color:var(--gray); }
+    .empty .icon { font-size:2.8rem; margin-bottom:10px; }
+
+    /* ══ MISC ══ */
+    .info-box { background:#EEF9FC; border-radius:10px; padding:13px 16px; font-size:.84rem; line-height:1.6; color:#0c5460; margin-bottom:16px; }
+    .info-box strong { color:var(--teal); }
+    .divider { border:none; border-top:1.5px solid var(--border); margin:20px 0; }
+    .progress-bar { height:5px; background:var(--border); border-radius:3px; margin-bottom:20px; }
+    .progress-fill { height:100%; background:var(--teal); border-radius:3px; transition:width .3s; }
+
+    /* ══ DESKTOP ══ */
+    @media (min-width: 640px) {
+      .bottom-nav { display:none; }
+      .desktop-nav { display:flex; }
+      .main { padding-bottom: 0; }
+      #toast { bottom: 28px; }
+      .overlay { align-items:center; padding:20px; }
+      .modal { border-radius:20px; max-width:520px; transform:translateY(20px); padding-bottom:28px; }
+      .overlay.open .modal { transform:translateY(0); }
+      .modal-drag { display:none; }
+      .topbar { height:64px; padding:0 32px; }
+      .hero { padding:72px 24px 56px; }
+      .cards-scroll { flex-wrap:wrap; overflow-x:visible; }
+      .card { min-width:0; flex:1; min-width:260px; }
+      .quick-grid { grid-template-columns: repeat(4,1fr); }
+      .stats-row { grid-template-columns: repeat(4,1fr); }
+      .section { padding:40px 24px; }
+      .form-card { padding:36px 32px; }
+      .admin-table-wrap { padding:0 24px 40px; }
+      .filter-row, .stats-row, .admin-header { padding-left:24px; padding-right:24px; }
     }
 
-    .chip {
-      display: inline-block; padding: 3px 10px; border-radius: 6px;
-      font-size: .75rem; font-weight: 700; background: var(--light); color: var(--navy);
+    @media (max-width: 400px) {
+      .form-row { grid-template-columns:1fr; }
+      .service-type-btns { flex-direction:column; }
     }
-    .chip.cleaning { background: #DBEAFE; color: #1E40AF; }
-    .chip.laundry { background: #D1FAE5; color: #065F46; }
-
-    .service-type-btns { display: flex; gap: 16px; margin-bottom: 24px; }
-    .service-type-btn {
-      flex: 1; padding: 20px 16px; border-radius: 14px; border: 2px solid var(--border);
-      background: var(--white); cursor: pointer; font-family: inherit; font-weight: 700;
-      font-size: 1rem; color: var(--navy); transition: all .2s; text-align: center;
-    }
-    .service-type-btn:hover, .service-type-btn.selected {
-      border-color: var(--teal); background: #EEF9FC; color: var(--teal);
-    }
-    .service-type-btn .icon { font-size: 1.8rem; display: block; margin-bottom: 8px; }
-
-    /* progress bar */
-    .progress-bar { height: 6px; background: var(--border); border-radius: 3px; margin-bottom: 28px; }
-    .progress-fill { height: 100%; background: var(--teal); border-radius: 3px; transition: width .3s; }
-
-    .divider { border: none; border-top: 1.5px solid var(--border); margin: 32px 0; }
-
-    .info-box { background: #EEF9FC; border-radius: 10px; padding: 14px 18px; font-size: .87rem; line-height: 1.6; color: #0c5460; margin-bottom: 20px; }
-    .info-box strong { color: var(--teal); }
   </style>
 </head>
 <body>
 
-<!-- ─── TOPBAR ─── -->
+<!-- ══ SPLASH SCREEN ══ -->
+<div id="splash">
+  <div style="font-size:4rem">🧹</div>
+  <div class="splash-logo">Bantu<span>.IN</span></div>
+  <div class="splash-tagline">Cleaning Service & Laundry</div>
+  <div class="splash-spinner"></div>
+</div>
+
+<!-- ══ IN-APP NOTIF ══ -->
+<div id="inapp-notif">
+  <div class="notif-icon">🔔</div>
+  <div class="notif-body">
+    <h5 id="notif-title"></h5>
+    <p id="notif-body-text"></p>
+  </div>
+  <button class="notif-close" onclick="closeInAppNotif()">✕</button>
+</div>
+
+<!-- iOS safe area top -->
+<div class="status-bar-spacer"></div>
+
+<!-- ══ TOPBAR ══ -->
 <nav class="topbar">
   <div class="logo">Bantu<span>.IN</span></div>
-  <div class="nav-links">
-    <button class="nav-btn active" onclick="showPage('home')">🏠 Beranda</button>
-    <button class="nav-btn" onclick="showPage('order')">📋 Pesan</button>
-    <button class="nav-btn" onclick="showPage('track')">📍 Lacak</button>
-    <button class="nav-btn admin-btn" onclick="showPage('admin')">⚙️ Admin</button>
+  <!-- Desktop nav -->
+  <div class="desktop-nav">
+    <button class="icon-btn" title="Beranda"  onclick="showPage('home')"  style="font-size:.85rem;padding:0 14px;width:auto;gap:5px">🏠 Beranda</button>
+    <button class="icon-btn" title="Pesan"    onclick="showPage('order')" style="font-size:.85rem;padding:0 14px;width:auto;gap:5px">📋 Pesan</button>
+    <button class="icon-btn" title="Lacak"    onclick="showPage('track')" style="font-size:.85rem;padding:0 14px;width:auto;gap:5px">📍 Lacak</button>
+    <button class="icon-btn" title="Admin"    onclick="showPage('admin')" style="font-size:.85rem;padding:0 14px;width:auto;gap:5px;color:var(--orange)">⚙️ Admin</button>
+  </div>
+  <!-- Mobile right icons -->
+  <div class="topbar-right" id="mobile-topbar-right">
+    <button class="icon-btn" onclick="requestNotifPermission()" title="Aktifkan Notifikasi">🔔</button>
+    <button class="icon-btn" onclick="openWhatsApp()" title="WhatsApp">💬</button>
   </div>
 </nav>
 
-<div class="main">
+<!-- ══ PULL TO REFRESH ══ -->
+<div id="ptr-indicator">⟳ Memperbarui...</div>
 
-  <!-- ══════════════════════════════════════
+<!-- ══ MAIN ══ -->
+<div class="main" id="main-scroll">
+
+  <!-- ════════════════════
        PAGE: HOME
-  ══════════════════════════════════════ -->
+  ════════════════════ -->
   <div id="page-home" class="page active">
 
     <div class="hero">
       <h1>Semua Jadi Bersih,<br><span>Semua Jadi Mudah.</span></h1>
-      <p>Jasa cleaning service & laundry profesional. Pesan sekarang, kami datang ke tempat Anda.</p>
+      <p>Cleaning service & laundry profesional. Pesan sekarang, kami datang ke tempat Anda! 🏠</p>
       <div class="hero-btns">
-        <button class="btn btn-primary" onclick="showPage('order')">🧹 Pesan Sekarang</button>
-        <button class="btn btn-secondary" onclick="showPage('track')">📍 Lacak Pesanan</button>
-        <button class="btn btn-outline" onclick="openWhatsApp()">💬 Hubungi Kami</button>
+        <button class="btn btn-primary" onclick="showPage('order')">🧹 Pesan</button>
+        <button class="btn btn-outline" onclick="showPage('track')">📍 Lacak</button>
       </div>
     </div>
 
     <div class="section">
+      <!-- Quick actions -->
+      <div class="section-title" style="font-size:1.1rem">Aksi Cepat</div>
+      <div style="margin-bottom:24px;margin-top:12px">
+        <div class="quick-grid">
+          <button class="quick-btn" onclick="showPage('order');setServiceType('cleaning')">
+            <span class="qi">🧹</span>Cleaning
+          </button>
+          <button class="quick-btn" onclick="showPage('order');setServiceType('laundry')">
+            <span class="qi">👕</span>Laundry
+          </button>
+          <button class="quick-btn" onclick="showPage('track')">
+            <span class="qi">📍</span>Lacak
+          </button>
+          <button class="quick-btn" onclick="openWhatsApp()">
+            <span class="qi">💬</span>WA Kami
+          </button>
+        </div>
+      </div>
+
       <div class="section-title">Layanan Kami</div>
-      <div class="section-sub">Pilih layanan yang sesuai dengan kebutuhan Anda</div>
-      <div class="cards">
+      <div class="section-sub">Geser untuk melihat semua layanan →</div>
+      <div class="cards-scroll">
         <div class="card">
           <div class="card-icon">🧹</div>
           <h3>Cleaning Service</h3>
-          <p>Pembersihan profesional untuk rumah, kantor, kos/kontrakan, deep cleaning, dan sofa/kasur. Tenaga terlatih & peralatan lengkap.</p>
+          <p>Rumah, kantor, deep cleaning, kos, sofa & kasur. Tenaga terlatih & peralatan lengkap.</p>
           <div class="card-cta">
-            <button class="btn btn-primary" style="padding:10px 20px;font-size:.88rem" onclick="showPage('order');setServiceType('cleaning')">Pilih Cleaning →</button>
+            <button class="btn btn-primary" style="padding:9px 16px;font-size:.82rem" onclick="showPage('order');setServiceType('cleaning')">Pilih →</button>
           </div>
         </div>
         <div class="card">
           <div class="card-icon">👕</div>
           <h3>Laundry</h3>
-          <p>Regular, express, sepatu, & bed cover. Pickup & delivery ke pintu Anda. Bersih, wangi, dan tepat waktu.</p>
+          <p>Regular, express, sepatu, & bed cover. Pickup & delivery ke pintu Anda.</p>
           <div class="card-cta">
-            <button class="btn btn-primary" style="padding:10px 20px;font-size:.88rem" onclick="showPage('order');setServiceType('laundry')">Pilih Laundry →</button>
+            <button class="btn btn-primary" style="padding:9px 16px;font-size:.82rem" onclick="showPage('order');setServiceType('laundry')">Pilih →</button>
           </div>
         </div>
         <div class="card">
           <div class="card-icon">⚡</div>
           <h3>Tracking Real-Time</h3>
-          <p>Pantau status pesanan Anda secara langsung. Notifikasi WhatsApp otomatis di setiap tahap pengerjaan.</p>
+          <p>Pantau status pesanan langsung. Notifikasi push otomatis setiap tahap.</p>
           <div class="card-cta">
-            <button class="btn btn-secondary" style="padding:10px 20px;font-size:.88rem;background:var(--orange)" onclick="showPage('track')">Lacak Pesanan →</button>
+            <button class="btn btn-secondary" style="padding:9px 16px;font-size:.82rem" onclick="showPage('track')">Lacak →</button>
           </div>
         </div>
       </div>
-    </div>
 
-    <!-- STATUS ORDER INFO -->
-    <div style="background:var(--white);border-top:1.5px solid var(--border);padding:32px 24px;">
-      <div style="max-width:1100px;margin:0 auto;">
-        <div class="section-title" style="font-size:1.3rem;margin-bottom:20px;">Status Pesanan</div>
-        <div style="display:flex;gap:12px;flex-wrap:wrap;">
+      <!-- Status info -->
+      <div style="background:var(--white);border-radius:14px;padding:16px;margin-top:24px;border:1.5px solid var(--border)">
+        <div style="font-weight:700;font-size:.9rem;margin-bottom:10px">📊 Status Order</div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;">
           <span class="status-badge s-1">① Menunggu</span>
           <span class="status-badge s-2">② Diproses</span>
           <span class="status-badge s-3">③ Pickup</span>
@@ -394,20 +621,17 @@
         </div>
       </div>
     </div>
-
   </div>
 
-  <!-- ══════════════════════════════════════
+  <!-- ════════════════════
        PAGE: ORDER
-  ══════════════════════════════════════ -->
+  ════════════════════ -->
   <div id="page-order" class="page">
-    <div class="section" style="max-width:720px;">
-      <div class="section-title">📋 Buat Pesanan Baru</div>
+    <div class="section">
+      <div class="section-title">📋 Buat Pesanan</div>
       <div class="section-sub">Isi form di bawah dengan lengkap</div>
-
       <div class="form-card">
-
-        <!-- Step indicator -->
+        <!-- Progress dots -->
         <div class="step-indicator">
           <div class="step-dot done" id="dot0"></div>
           <div class="step-dot" id="dot1"></div>
@@ -416,9 +640,9 @@
         </div>
         <div class="progress-bar"><div class="progress-fill" id="progBar" style="width:25%"></div></div>
 
-        <!-- STEP 0: Pilih Jenis Layanan -->
+        <!-- STEP 0 -->
         <div class="form-step active" id="step0">
-          <div class="form-title">Pilih Jenis Layanan</div>
+          <div class="form-title">Pilih Layanan</div>
           <div class="service-type-btns">
             <button class="service-type-btn" id="btn-cleaning" onclick="selectService('cleaning')">
               <span class="icon">🧹</span>Cleaning Service
@@ -427,8 +651,6 @@
               <span class="icon">👕</span>Laundry
             </button>
           </div>
-
-          <!-- CLEANING sub-options -->
           <div id="cleaning-opts" style="display:none">
             <div class="form-group">
               <label>Jenis Cleaning</label>
@@ -441,23 +663,23 @@
                 <option value="Sofa & Kasur">🛋️ Sofa & Kasur</option>
               </select>
             </div>
-            <div class="form-group">
-              <label>Luas Ruangan (m²)</label>
-              <input type="number" id="c-area" placeholder="cth: 50" min="1" oninput="calcPrice()"/>
-            </div>
-            <div class="form-group">
-              <label>Durasi (jam)</label>
-              <select id="c-duration" onchange="calcPrice()">
-                <option value="2">2 Jam</option>
-                <option value="3">3 Jam</option>
-                <option value="4">4 Jam</option>
-                <option value="6">6 Jam</option>
-                <option value="8">8 Jam (Full Day)</option>
-              </select>
+            <div class="form-row">
+              <div class="form-group">
+                <label>Luas Ruangan (m²)</label>
+                <input type="number" id="c-area" placeholder="cth: 50" min="1" inputmode="numeric" oninput="calcPrice()"/>
+              </div>
+              <div class="form-group">
+                <label>Durasi (jam)</label>
+                <select id="c-duration" onchange="calcPrice()">
+                  <option value="2">2 Jam</option>
+                  <option value="3">3 Jam</option>
+                  <option value="4">4 Jam</option>
+                  <option value="6">6 Jam</option>
+                  <option value="8">Full Day</option>
+                </select>
+              </div>
             </div>
           </div>
-
-          <!-- LAUNDRY sub-options -->
           <div id="laundry-opts" style="display:none">
             <div class="form-group">
               <label>Jenis Laundry</label>
@@ -469,80 +691,80 @@
                 <option value="Bed Cover">Bed Cover</option>
               </select>
             </div>
-            <div class="form-group">
-              <label>Estimasi Berat (kg)</label>
-              <input type="number" id="l-weight" placeholder="cth: 3" min="0.5" step="0.5" oninput="calcPrice()"/>
-            </div>
-            <div class="form-group">
-              <label>Pickup / Delivery</label>
-              <select id="l-delivery">
-                <option value="pickup">Pickup ke Lokasi (+Gratis)</option>
-                <option value="antar-sendiri">Antar Sendiri (-Diskon 5%)</option>
-              </select>
+            <div class="form-row">
+              <div class="form-group">
+                <label>Berat (kg)</label>
+                <input type="number" id="l-weight" placeholder="cth: 3" min="0.5" step="0.5" inputmode="decimal" oninput="calcPrice()"/>
+              </div>
+              <div class="form-group">
+                <label>Pickup</label>
+                <select id="l-delivery">
+                  <option value="pickup">Pickup Gratis</option>
+                  <option value="antar-sendiri">Antar Sendiri</option>
+                </select>
+              </div>
             </div>
           </div>
-
           <div id="price-box" style="display:none">
             <div class="price-display">
               <div>
-                <div style="font-size:.82rem;opacity:.8">Estimasi Harga</div>
+                <div style="font-size:.78rem;opacity:.8">Estimasi Harga</div>
                 <div class="amount" id="price-amount">Rp 0</div>
               </div>
-              <div style="font-size:1.6rem">💰</div>
+              <div style="font-size:1.5rem">💰</div>
             </div>
           </div>
-          <button class="btn btn-primary" style="width:100%" onclick="nextStep(1)">Lanjut →</button>
+          <button class="btn btn-primary" style="width:100%;justify-content:center" onclick="nextStep(1)">Lanjut →</button>
         </div>
 
-        <!-- STEP 1: Jadwal & Lokasi -->
+        <!-- STEP 1 -->
         <div class="form-step" id="step1">
           <div class="form-title">📅 Jadwal & Lokasi</div>
           <div class="form-row">
             <div class="form-group">
               <label>Tanggal</label>
-              <input type="date" id="o-date" />
+              <input type="date" id="o-date"/>
             </div>
             <div class="form-group">
               <label>Jam</label>
-              <input type="time" id="o-time" value="09:00" />
+              <input type="time" id="o-time" value="09:00"/>
             </div>
           </div>
           <div class="form-group">
             <label>Alamat Lengkap</label>
-            <textarea id="o-address" placeholder="Jl. Contoh No.12, RT 01/RW 03, Kelurahan, Kecamatan, Kota"></textarea>
+            <textarea id="o-address" placeholder="Jl. Contoh No.12, RT 01/RW 03, Kelurahan, Kota"></textarea>
           </div>
-          <div style="display:flex;gap:12px;">
-            <button class="btn btn-outline" style="border-color:var(--border);color:var(--navy)" onclick="nextStep(0)">← Kembali</button>
-            <button class="btn btn-primary" style="flex:1" onclick="nextStep(2)">Lanjut →</button>
+          <div style="display:flex;gap:10px">
+            <button class="btn btn-ghost" style="padding:13px 18px" onclick="nextStep(0)">← Kembali</button>
+            <button class="btn btn-primary" style="flex:1;justify-content:center" onclick="nextStep(2)">Lanjut →</button>
           </div>
         </div>
 
-        <!-- STEP 2: Data Diri -->
+        <!-- STEP 2 -->
         <div class="form-step" id="step2">
           <div class="form-title">👤 Data Diri</div>
           <div class="form-group">
             <label>Nama Lengkap</label>
-            <input type="text" id="o-name" placeholder="Nama Anda" />
+            <input type="text" id="o-name" placeholder="Nama Anda" autocomplete="name"/>
           </div>
           <div class="form-group">
             <label>Nomor WhatsApp</label>
-            <input type="tel" id="o-wa" placeholder="08xxxxxxxxxx" />
+            <input type="tel" id="o-wa" placeholder="08xxxxxxxxxx" inputmode="tel" autocomplete="tel"/>
           </div>
           <div class="form-group">
-            <label>Catatan Tambahan (opsional)</label>
+            <label>Catatan (opsional)</label>
             <textarea id="o-notes" placeholder="Instruksi khusus, akses masuk, dll."></textarea>
           </div>
-          <div style="display:flex;gap:12px;">
-            <button class="btn btn-outline" style="border-color:var(--border);color:var(--navy)" onclick="nextStep(1)">← Kembali</button>
-            <button class="btn btn-primary" style="flex:1" onclick="nextStep(3)">Review Pesanan →</button>
+          <div style="display:flex;gap:10px">
+            <button class="btn btn-ghost" style="padding:13px 18px" onclick="nextStep(1)">← Kembali</button>
+            <button class="btn btn-primary" style="flex:1;justify-content:center" onclick="nextStep(3)">Review →</button>
           </div>
         </div>
 
-        <!-- STEP 3: Konfirmasi -->
+        <!-- STEP 3 -->
         <div class="form-step" id="step3">
-          <div class="form-title">✅ Konfirmasi Pesanan</div>
+          <div class="form-title">✅ Konfirmasi</div>
           <div class="info-box" id="order-summary"></div>
-
           <div class="form-group">
             <label>Metode Pembayaran</label>
             <select id="o-payment">
@@ -552,85 +774,71 @@
               <option value="E-Wallet">💳 E-Wallet</option>
             </select>
           </div>
-
           <div class="price-display">
             <div>
-              <div style="font-size:.82rem;opacity:.8">Total Pembayaran</div>
+              <div style="font-size:.78rem;opacity:.8">Total Bayar</div>
               <div class="amount" id="confirm-price">Rp 0</div>
             </div>
-            <div style="font-size:1.6rem">🧾</div>
+            <div style="font-size:1.5rem">🧾</div>
           </div>
-
-          <div style="display:flex;gap:12px;">
-            <button class="btn btn-outline" style="border-color:var(--border);color:var(--navy)" onclick="nextStep(2)">← Kembali</button>
-            <button class="btn btn-secondary" style="flex:1" onclick="submitOrder()" id="submit-btn">🚀 Pesan Sekarang!</button>
+          <div style="display:flex;gap:10px">
+            <button class="btn btn-ghost" style="padding:13px 18px" onclick="nextStep(2)">← Kembali</button>
+            <button class="btn btn-secondary" style="flex:1;justify-content:center" onclick="submitOrder()" id="submit-btn">🚀 Pesan Sekarang!</button>
           </div>
         </div>
-
       </div>
     </div>
   </div>
 
-  <!-- ══════════════════════════════════════
+  <!-- ════════════════════
        PAGE: TRACK
-  ══════════════════════════════════════ -->
+  ════════════════════ -->
   <div id="page-track" class="page">
-    <div class="section" style="max-width:600px;">
+    <div class="section">
       <div class="section-title">📍 Lacak Pesanan</div>
-      <div class="section-sub">Masukkan nomor pesanan atau nomor WhatsApp Anda</div>
-
+      <div class="section-sub">Masukkan ID pesanan atau nomor WhatsApp</div>
       <div class="form-card">
         <div class="form-group">
           <label>Nomor Pesanan / WhatsApp</label>
-          <input type="text" id="track-input" placeholder="Masukkan ID pesanan atau 08xxx..." />
+          <input type="text" id="track-input" placeholder="ID pesanan atau 08xxx..." inputmode="text"/>
         </div>
-        <button class="btn btn-primary" style="width:100%" onclick="trackOrder()">🔍 Lacak</button>
+        <button class="btn btn-primary" style="width:100%;justify-content:center" onclick="trackOrder()">🔍 Lacak Pesanan</button>
       </div>
-
-      <div id="track-result" style="margin-top:24px;display:none"></div>
-      <div id="track-empty" style="display:none">
-        <div class="empty">
-          <div class="icon">🔍</div>
-          <div>Pesanan tidak ditemukan. Periksa kembali nomor yang Anda masukkan.</div>
-        </div>
+      <div id="track-result" style="margin-top:16px;display:none"></div>
+      <div id="track-empty"  style="display:none">
+        <div class="empty"><div class="icon">🔍</div>Pesanan tidak ditemukan.</div>
       </div>
     </div>
   </div>
 
-  <!-- ══════════════════════════════════════
+  <!-- ════════════════════
        PAGE: ADMIN
-  ══════════════════════════════════════ -->
+  ════════════════════ -->
   <div id="page-admin" class="page">
-
-    <!-- Admin login wall -->
-    <div id="admin-login" style="max-width:420px;margin:60px auto;padding:0 24px;">
+    <div id="admin-login" style="max-width:400px;margin:40px auto;padding:0 16px">
       <div class="form-card">
         <div class="form-title">⚙️ Admin Login</div>
         <div class="form-group">
           <label>Password</label>
-          <input type="password" id="admin-pw" placeholder="Masukkan password admin" onkeydown="if(event.key==='Enter')adminLogin()" />
+          <input type="password" id="admin-pw" placeholder="Password admin" onkeydown="if(event.key==='Enter')adminLogin()"/>
         </div>
-        <button class="btn btn-primary" style="width:100%" onclick="adminLogin()">Masuk</button>
+        <button class="btn btn-primary" style="width:100%;justify-content:center" onclick="adminLogin()">Masuk</button>
       </div>
     </div>
-
-    <!-- Admin dashboard (hidden until login) -->
     <div id="admin-dashboard" style="display:none">
       <div class="admin-header">
         <div>
-          <h2>⚙️ Dashboard Admin — Bantu.IN</h2>
-          <div style="font-size:.85rem;opacity:.7;margin-top:4px">Kelola semua pesanan masuk</div>
+          <h2>⚙️ Dashboard Admin</h2>
+          <div style="font-size:.8rem;opacity:.7;margin-top:2px">Bantu.IN – Kelola Pesanan</div>
         </div>
-        <button class="btn btn-outline" onclick="adminLogout()" style="padding:8px 18px;font-size:.85rem">Keluar</button>
+        <button class="btn btn-outline" onclick="adminLogout()" style="padding:8px 16px;font-size:.82rem">Keluar</button>
       </div>
-
       <div class="stats-row" id="stats-row">
-        <div class="stat-card"><div class="num" id="s-total">0</div><div class="label">Total Pesanan</div></div>
+        <div class="stat-card"><div class="num" id="s-total">0</div><div class="label">Total</div></div>
         <div class="stat-card"><div class="num" id="s-menunggu">0</div><div class="label">Menunggu</div></div>
         <div class="stat-card"><div class="num" id="s-proses">0</div><div class="label">Diproses</div></div>
         <div class="stat-card"><div class="num" id="s-selesai">0</div><div class="label">Selesai</div></div>
       </div>
-
       <div class="filter-row">
         <select class="filter-select" id="filter-status" onchange="renderAdminTable()">
           <option value="">Semua Status</option>
@@ -647,589 +855,569 @@
           <option value="cleaning">Cleaning</option>
           <option value="laundry">Laundry</option>
         </select>
-        <button class="btn btn-primary" style="padding:8px 18px;font-size:.85rem" onclick="exportCSV()">⬇️ Export CSV</button>
+        <button class="btn btn-primary" style="padding:8px 14px;font-size:.82rem" onclick="exportCSV()">⬇️ CSV</button>
       </div>
-
       <div class="admin-table-wrap">
         <table class="admin-table">
-          <thead>
-            <tr>
-              <th>ID</th><th>Nama</th><th>WA</th><th>Layanan</th>
-              <th>Tipe</th><th>Tanggal</th><th>Harga</th>
-              <th>Bayar</th><th>Status</th><th>Aksi</th>
-            </tr>
-          </thead>
+          <thead><tr>
+            <th>ID</th><th>Nama</th><th>WA</th><th>Layanan</th>
+            <th>Tgl</th><th>Harga</th><th>Status</th><th>Aksi</th>
+          </tr></thead>
           <tbody id="admin-tbody"></tbody>
         </table>
       </div>
     </div>
-
   </div>
 
 </div><!-- /main -->
 
-<!-- ─── MODAL: ORDER SUCCESS ─── -->
-<div class="overlay" id="modal-success">
-  <div class="modal" style="text-align:center">
-    <div style="font-size:3rem;margin-bottom:16px">🎉</div>
-    <div class="modal-title" style="text-align:center">Pesanan Berhasil!</div>
-    <p style="color:var(--gray);margin-bottom:24px;line-height:1.6">
-      Pesanan Anda sudah masuk. Admin kami akan segera mengkonfirmasi dalam waktu singkat.
-      Notifikasi WhatsApp akan dikirim ke nomor Anda.
-    </p>
-    <div id="wa-preview" style="margin-bottom:24px"></div>
-    <div style="background:var(--light);border-radius:10px;padding:14px;margin-bottom:20px;font-size:.9rem">
-      ID Pesanan: <strong id="success-order-id" style="color:var(--teal)"></strong>
+<!-- ══ BOTTOM NAV ══ -->
+<nav class="bottom-nav">
+  <button class="bnav-btn active" id="bn-home" onclick="showPage('home')">
+    <span class="bn-icon">🏠</span>Beranda
+  </button>
+  <button class="bnav-btn" id="bn-order" onclick="showPage('order')">
+    <div class="bnav-wrap">
+      <span class="bn-icon">📋</span>
+      <span class="bnav-badge" id="badge-order"></span>
     </div>
+    Pesan
+  </button>
+  <button class="bnav-btn" id="bn-track" onclick="showPage('track')">
+    <span class="bn-icon">📍</span>Lacak
+  </button>
+  <button class="bnav-btn" id="bn-admin" onclick="showPage('admin')">
+    <span class="bn-icon">⚙️</span>Admin
+  </button>
+</nav>
 
-    <!-- Rating -->
-    <div id="rating-section">
-      <div style="font-weight:700;margin-bottom:10px">Beri rating layanan kami:</div>
-      <div class="stars" id="stars">
+<!-- ══ MODAL: SUCCESS ══ -->
+<div class="overlay" id="modal-success">
+  <div class="modal">
+    <div class="modal-drag"></div>
+    <div style="text-align:center">
+      <div style="font-size:2.8rem;margin-bottom:12px">🎉</div>
+      <div class="modal-title" style="text-align:center">Pesanan Berhasil!</div>
+      <p style="color:var(--gray);margin-bottom:16px;font-size:.88rem;line-height:1.6">
+        Admin kami akan segera konfirmasi. Notifikasi push akan dikirim ke perangkat Anda.
+      </p>
+      <div id="wa-preview" style="margin-bottom:16px;text-align:left"></div>
+      <div style="background:var(--light);border-radius:10px;padding:12px;margin-bottom:16px;font-size:.88rem">
+        ID: <strong id="success-order-id" style="color:var(--teal)"></strong>
+      </div>
+      <div style="font-weight:700;margin-bottom:10px;font-size:.9rem">Beri Rating:</div>
+      <div class="stars" id="stars" style="justify-content:center">
         <span class="star" onclick="setRating(1)">★</span>
         <span class="star" onclick="setRating(2)">★</span>
         <span class="star" onclick="setRating(3)">★</span>
         <span class="star" onclick="setRating(4)">★</span>
         <span class="star" onclick="setRating(5)">★</span>
       </div>
-      <textarea id="ulasan" placeholder="Tulis ulasan (opsional)..." style="width:100%;margin-top:12px;padding:10px;border-radius:8px;border:1.5px solid var(--border);font-family:inherit;font-size:.88rem;min-height:70px;resize:vertical"></textarea>
-    </div>
-
-    <div style="display:flex;gap:12px;margin-top:20px;">
-      <button class="btn btn-outline" style="flex:1;border-color:var(--border);color:var(--navy)" onclick="closeModal('modal-success');showPage('track')">📍 Lacak Pesanan</button>
-      <button class="btn btn-primary" style="flex:1" onclick="closeModal('modal-success');showPage('home')">🏠 Beranda</button>
+      <textarea id="ulasan" placeholder="Tulis ulasan (opsional)..." style="width:100%;margin-top:12px;padding:10px;border-radius:8px;border:1.5px solid var(--border);font-family:inherit;font-size:.88rem;min-height:60px;resize:vertical"></textarea>
+      <div style="display:flex;gap:10px;margin-top:16px">
+        <button class="btn btn-ghost" style="flex:1;justify-content:center" onclick="closeModal('modal-success');showPage('track')">📍 Lacak</button>
+        <button class="btn btn-primary" style="flex:1;justify-content:center" onclick="closeModal('modal-success');showPage('home')">🏠 Beranda</button>
+      </div>
     </div>
   </div>
 </div>
 
-<!-- ─── MODAL: ORDER DETAIL (admin) ─── -->
+<!-- ══ MODAL: ORDER DETAIL ══ -->
 <div class="overlay" id="modal-detail">
   <div class="modal">
+    <div class="modal-drag"></div>
     <button class="modal-close" onclick="closeModal('modal-detail')">✕</button>
     <div class="modal-title">📄 Detail Pesanan</div>
     <div id="modal-detail-body"></div>
-    <div style="display:flex;gap:12px;margin-top:20px;flex-wrap:wrap" id="modal-detail-actions"></div>
+    <div style="display:flex;gap:10px;margin-top:16px;flex-wrap:wrap" id="modal-detail-actions"></div>
   </div>
 </div>
 
-<!-- ─── TOAST ─── -->
+<!-- ══ TOAST ══ -->
 <div id="toast"></div>
 
 <script>
-/* ══════════════════════════════════════════════
+/* ════════════════════════════════
    STATE
-══════════════════════════════════════════════ */
-let allOrders = {};
-let currentStep = 0;
-let selectedService = '';
+════════════════════════════════ */
+let allOrders      = {};
+let currentStep    = 0;
+let selectedService= '';
 let estimatedPrice = 0;
 let currentOrderId = '';
 let selectedRating = 0;
-let adminLoggedIn = false;
+let adminLoggedIn  = false;
+const ADMIN_PW     = 'bantuin2024'; // ganti sesuai kebutuhan
 
-const ADMIN_PASSWORD = "bantuin2024"; // ganti sesuai kebutuhan
+/* ════════════════════════════════
+   SPLASH
+════════════════════════════════ */
+window.addEventListener('load', () => {
+  setTimeout(() => {
+    document.getElementById('splash').classList.add('hide');
+    setTimeout(() => document.getElementById('splash').remove(), 600);
+  }, 1800);
+});
 
-/* ══════════════════════════════════════════════
+/* ════════════════════════════════
    NAVIGATION
-══════════════════════════════════════════════ */
+════════════════════════════════ */
 function showPage(id) {
   document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
-  document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
   document.getElementById('page-' + id).classList.add('active');
-  const idx = ['home','order','track','admin'].indexOf(id);
-  document.querySelectorAll('.nav-btn')[idx]?.classList.add('active');
-  window.scrollTo(0,0);
+  // bottom nav highlight
+  ['home','order','track','admin'].forEach(n => {
+    const b = document.getElementById('bn-' + n);
+    if (!b) return;
+    b.className = 'bnav-btn' + (n === id ? (n === 'admin' ? ' active-orange' : ' active') : '');
+  });
+  window.scrollTo({ top: 0, behavior: 'smooth' });
   if (id === 'admin' && adminLoggedIn) loadAdminOrders();
   if (id === 'order') resetForm();
 }
 
-/* ══════════════════════════════════════════════
+/* ════════════════════════════════
+   PULL TO REFRESH
+════════════════════════════════ */
+let ptrStart = 0, ptrActive = false;
+const ptr = document.getElementById('ptr-indicator');
+
+document.addEventListener('touchstart', e => {
+  if (window.scrollY === 0) ptrStart = e.touches[0].clientY;
+}, { passive: true });
+
+document.addEventListener('touchmove', e => {
+  if (ptrStart && window.scrollY === 0) {
+    const dy = e.touches[0].clientY - ptrStart;
+    if (dy > 60 && !ptrActive) {
+      ptrActive = true;
+      ptr.classList.add('visible');
+    }
+  }
+}, { passive: true });
+
+document.addEventListener('touchend', () => {
+  if (ptrActive) {
+    ptrActive = false;
+    ptr.classList.remove('visible');
+    ptrStart = 0;
+    // Refresh current page data
+    const active = document.querySelector('.page.active');
+    if (active?.id === 'page-admin' && adminLoggedIn) loadAdminOrders();
+    showToast('Halaman diperbarui ✓', 'success');
+  }
+});
+
+/* ════════════════════════════════
+   FCM PUSH NOTIFICATION
+════════════════════════════════ */
+async function requestNotifPermission() {
+  if (!('Notification' in window)) {
+    showToast('Browser tidak mendukung notifikasi', 'error'); return;
+  }
+  const perm = await Notification.requestPermission();
+  if (perm !== 'granted') {
+    showToast('Izin notifikasi ditolak', 'error'); return;
+  }
+  showToast('Notifikasi diaktifkan! 🔔', 'success');
+  // Jika FCM tersedia, dapatkan token
+  if (window._messaging) {
+    try {
+      // VAPID key harus diisi dari Firebase Console > Project Settings > Cloud Messaging
+      // const token = await getToken(window._messaging, { vapidKey: 'YOUR_VAPID_KEY' });
+      // Simpan token ke Firebase jika perlu
+      showInAppNotif('Bantu.IN', 'Notifikasi push aktif! Anda akan menerima update pesanan.');
+    } catch(e) { console.warn('FCM token error:', e); }
+  } else {
+    // Fallback: native Notification API
+    new Notification('Bantu.IN 🧹', { body: 'Notifikasi aktif! Anda akan dapat update pesanan.', icon: '/favicon.ico' });
+  }
+}
+
+function showInAppNotif(title, body) {
+  document.getElementById('notif-title').textContent = title;
+  document.getElementById('notif-body-text').textContent = body;
+  const el = document.getElementById('inapp-notif');
+  el.classList.add('show');
+  setTimeout(() => el.classList.remove('show'), 5000);
+}
+
+function closeInAppNotif() {
+  document.getElementById('inapp-notif').classList.remove('show');
+}
+
+/* ════════════════════════════════
    ORDER FORM
-══════════════════════════════════════════════ */
+════════════════════════════════ */
 function resetForm() {
-  currentStep = 0;
-  selectedService = '';
-  estimatedPrice = 0;
-  document.querySelectorAll('.form-step').forEach((s,i) => {
-    s.classList.toggle('active', i === 0);
-  });
+  currentStep = 0; selectedService = ''; estimatedPrice = 0;
+  document.querySelectorAll('.form-step').forEach((s,i) => s.classList.toggle('active', i===0));
   updateProgress();
   document.getElementById('cleaning-opts').style.display = 'none';
   document.getElementById('laundry-opts').style.display = 'none';
   document.getElementById('price-box').style.display = 'none';
   document.querySelectorAll('.service-type-btn').forEach(b => b.classList.remove('selected'));
-  // Reset inputs
-  ['c-type','c-area','c-duration','l-type','l-weight','l-delivery','o-date','o-time','o-address','o-name','o-wa','o-notes','o-payment'].forEach(id => {
-    const el = document.getElementById(id);
-    if (!el) return;
-    if (el.tagName === 'SELECT') el.selectedIndex = 0;
-    else el.value = '';
+  ['c-type','c-area','l-type','l-weight','o-address','o-name','o-wa','o-notes'].forEach(id => {
+    const el = document.getElementById(id); if (!el) return;
+    el.tagName === 'SELECT' ? (el.selectedIndex = 0) : (el.value = '');
   });
   document.getElementById('o-time').value = '09:00';
-  // Set min date = today
-  const today = new Date().toISOString().split('T')[0];
-  document.getElementById('o-date').min = today;
+  document.getElementById('o-date').min = new Date().toISOString().split('T')[0];
+  document.getElementById('o-date').value = '';
 }
 
-function setServiceType(type) {
-  selectService(type);
-}
+function setServiceType(t) { selectService(t); }
 
 function selectService(type) {
   selectedService = type;
-  document.getElementById('cleaning-opts').style.display = type === 'cleaning' ? 'block' : 'none';
-  document.getElementById('laundry-opts').style.display = type === 'laundry' ? 'block' : 'none';
-  document.getElementById('btn-cleaning').classList.toggle('selected', type === 'cleaning');
-  document.getElementById('btn-laundry').classList.toggle('selected', type === 'laundry');
+  document.getElementById('cleaning-opts').style.display = type==='cleaning'?'block':'none';
+  document.getElementById('laundry-opts').style.display  = type==='laundry' ?'block':'none';
+  document.getElementById('btn-cleaning').classList.toggle('selected', type==='cleaning');
+  document.getElementById('btn-laundry').classList.toggle('selected',  type==='laundry');
   document.getElementById('price-box').style.display = 'block';
   calcPrice();
 }
 
 function calcPrice() {
-  let price = 0;
+  let p = 0;
   if (selectedService === 'cleaning') {
-    const area = parseFloat(document.getElementById('c-area').value) || 0;
-    const dur = parseInt(document.getElementById('c-duration').value) || 2;
+    const area = parseFloat(document.getElementById('c-area').value)||0;
+    const dur  = parseInt(document.getElementById('c-duration').value)||2;
     const type = document.getElementById('c-type').value;
-    const base = { 'Rumah':35000,'Kantor':40000,'Deep Cleaning':55000,'Kos/Kontrakan':30000,'Sofa & Kasur':50000 };
-    price = (base[type] || 35000) * dur + area * 500;
-    if (price < 80000) price = 80000;
+    const base = { Rumah:35000, Kantor:40000, 'Deep Cleaning':55000, 'Kos/Kontrakan':30000, 'Sofa & Kasur':50000 };
+    p = (base[type]||35000)*dur + area*500;
+    if (p < 80000) p = 80000;
   } else if (selectedService === 'laundry') {
     const type = document.getElementById('l-type').value;
-    const wt = parseFloat(document.getElementById('l-weight').value) || 0;
-    const rates = { 'Regular':7000,'Express':12000,'Sepatu':25000,'Bed Cover':35000 };
-    if (type === 'Sepatu' || type === 'Bed Cover') price = rates[type] || 0;
-    else price = (rates[type] || 7000) * (wt || 1);
-    if (price < 15000) price = 15000;
+    const wt   = parseFloat(document.getElementById('l-weight').value)||0;
+    const rate = { Regular:7000, Express:12000, Sepatu:25000, 'Bed Cover':35000 };
+    p = (type==='Sepatu'||type==='Bed Cover') ? (rate[type]||0) : (rate[type]||7000)*(wt||1);
+    if (p < 15000) p = 15000;
   }
-  estimatedPrice = Math.round(price);
+  estimatedPrice = Math.round(p);
   const fmt = 'Rp ' + estimatedPrice.toLocaleString('id-ID');
   document.getElementById('price-amount').textContent = fmt;
   document.getElementById('confirm-price').textContent = fmt;
 }
 
 function nextStep(to) {
-  if (to > currentStep) {
-    if (!validateStep(currentStep)) return;
-  }
+  if (to > currentStep && !validateStep(currentStep)) return;
   currentStep = to;
-  document.querySelectorAll('.form-step').forEach((s,i) => {
-    s.classList.toggle('active', i === to);
-  });
+  document.querySelectorAll('.form-step').forEach((s,i) => s.classList.toggle('active', i===to));
   updateProgress();
   if (to === 3) buildSummary();
+  // Scroll form into view on mobile
+  document.querySelector('.form-card').scrollIntoView({ behavior:'smooth', block:'start' });
 }
 
 function updateProgress() {
-  const pct = [25, 50, 75, 100][currentStep];
+  const pct = [25,50,75,100][currentStep];
   document.getElementById('progBar').style.width = pct + '%';
-  for (let i = 0; i <= 3; i++) {
-    document.getElementById('dot' + i).classList.toggle('done', i <= currentStep);
-  }
+  for (let i=0;i<=3;i++) document.getElementById('dot'+i).classList.toggle('done', i<=currentStep);
 }
 
 function validateStep(step) {
-  if (step === 0) {
-    if (!selectedService) { showToast('Pilih jenis layanan dulu!','error'); return false; }
-    if (selectedService === 'cleaning') {
-      if (!document.getElementById('c-type').value) { showToast('Pilih jenis cleaning!','error'); return false; }
-    }
-    if (selectedService === 'laundry') {
-      if (!document.getElementById('l-type').value) { showToast('Pilih jenis laundry!','error'); return false; }
-    }
+  if (step===0) {
+    if (!selectedService) { showToast('Pilih jenis layanan!','error'); return false; }
+    if (selectedService==='cleaning' && !document.getElementById('c-type').value) { showToast('Pilih jenis cleaning!','error'); return false; }
+    if (selectedService==='laundry'  && !document.getElementById('l-type').value) { showToast('Pilih jenis laundry!','error'); return false; }
   }
-  if (step === 1) {
-    if (!document.getElementById('o-date').value) { showToast('Pilih tanggal!','error'); return false; }
-    if (!document.getElementById('o-address').value.trim()) { showToast('Isi alamat lengkap!','error'); return false; }
+  if (step===1) {
+    if (!document.getElementById('o-date').value)          { showToast('Pilih tanggal!','error'); return false; }
+    if (!document.getElementById('o-address').value.trim()) { showToast('Isi alamat!','error');   return false; }
   }
-  if (step === 2) {
-    if (!document.getElementById('o-name').value.trim()) { showToast('Isi nama Anda!','error'); return false; }
-    const wa = document.getElementById('o-wa').value.trim();
-    if (!wa || wa.length < 10) { showToast('Nomor WhatsApp tidak valid!','error'); return false; }
+  if (step===2) {
+    if (!document.getElementById('o-name').value.trim())   { showToast('Isi nama Anda!','error'); return false; }
+    if (document.getElementById('o-wa').value.trim().length < 10) { showToast('Nomor WA tidak valid!','error'); return false; }
   }
   return true;
 }
 
 function buildSummary() {
-  const name = document.getElementById('o-name').value;
+  const n  = document.getElementById('o-name').value;
   const wa = document.getElementById('o-wa').value;
-  const date = document.getElementById('o-date').value;
-  const time = document.getElementById('o-time').value;
-  const addr = document.getElementById('o-address').value;
-  let layanan = '', detail = '';
-  if (selectedService === 'cleaning') {
-    layanan = 'Cleaning Service';
-    detail = document.getElementById('c-type').value + ' — ' + document.getElementById('c-duration').value + ' jam';
-  } else {
-    layanan = 'Laundry';
-    detail = document.getElementById('l-type').value + ' — ' + document.getElementById('l-weight').value + ' kg';
-  }
-  document.getElementById('order-summary').innerHTML = `
-    <strong>Ringkasan Pesanan:</strong><br>
-    👤 ${name} | 📱 ${wa}<br>
-    🛎️ ${layanan}: ${detail}<br>
-    📅 ${date} pukul ${time}<br>
-    📍 ${addr}<br>
-    💰 Estimasi: <strong>Rp ${estimatedPrice.toLocaleString('id-ID')}</strong>
-  `;
+  const dt = document.getElementById('o-date').value;
+  const tm = document.getElementById('o-time').value;
+  const ad = document.getElementById('o-address').value;
+  const lbl = selectedService==='cleaning'
+    ? 'Cleaning — '+document.getElementById('c-type').value+' ('+document.getElementById('c-duration').value+' jam)'
+    : 'Laundry — '+document.getElementById('l-type').value+' ('+document.getElementById('l-weight').value+' kg)';
+  document.getElementById('order-summary').innerHTML =
+    `👤 <strong>${n}</strong> | 📱 ${wa}<br>🛎️ ${lbl}<br>📅 ${dt} ${tm}<br>📍 ${ad}<br>💰 <strong>Rp ${estimatedPrice.toLocaleString('id-ID')}</strong>`;
   document.getElementById('confirm-price').textContent = 'Rp ' + estimatedPrice.toLocaleString('id-ID');
 }
 
 async function submitOrder() {
-  if (!window._firebaseReady) { showToast('Koneksi Firebase belum siap, coba lagi!','error'); return; }
+  if (!window._firebaseReady) { showToast('Firebase belum siap!','error'); return; }
   const btn = document.getElementById('submit-btn');
-  btn.disabled = true; btn.textContent = '⏳ Memproses...';
-
-  const name = document.getElementById('o-name').value.trim();
-  const wa = document.getElementById('o-wa').value.trim();
-  const date = document.getElementById('o-date').value;
-  const time = document.getElementById('o-time').value;
-  const addr = document.getElementById('o-address').value.trim();
-  const payment = document.getElementById('o-payment').value;
-  const notes = document.getElementById('o-notes').value.trim();
-
-  let detail = {};
-  if (selectedService === 'cleaning') {
-    detail = {
-      jenis: document.getElementById('c-type').value,
-      area: document.getElementById('c-area').value,
-      durasi: document.getElementById('c-duration').value,
-    };
-  } else {
-    detail = {
-      jenis: document.getElementById('l-type').value,
-      berat: document.getElementById('l-weight').value,
-      delivery: document.getElementById('l-delivery').value,
-    };
-  }
-
+  btn.disabled = true; btn.textContent = '⏳ Menyimpan...';
   const order = {
-    name, wa, date, time, address: addr, payment, notes,
+    name:        document.getElementById('o-name').value.trim(),
+    wa:          document.getElementById('o-wa').value.trim(),
+    date:        document.getElementById('o-date').value,
+    time:        document.getElementById('o-time').value,
+    address:     document.getElementById('o-address').value.trim(),
+    payment:     document.getElementById('o-payment').value,
+    notes:       document.getElementById('o-notes').value.trim(),
     serviceType: selectedService,
-    detail,
-    price: estimatedPrice,
-    status: 'Menunggu',
-    createdAt: new Date().toISOString(),
-    rating: 0,
-    ulasan: '',
+    detail:      selectedService==='cleaning'
+      ? { jenis:document.getElementById('c-type').value, area:document.getElementById('c-area').value, durasi:document.getElementById('c-duration').value }
+      : { jenis:document.getElementById('l-type').value, berat:document.getElementById('l-weight').value, delivery:document.getElementById('l-delivery').value },
+    price:       estimatedPrice,
+    status:      'Menunggu',
+    createdAt:   new Date().toISOString(),
+    rating: 0, ulasan: ''
   };
-
   try {
-    const ordersRef = window._ref(window._db, 'orders');
-    const newRef = window._push(ordersRef);
+    const newRef = window._push(window._ref(window._db,'orders'));
     await window._set(newRef, order);
     currentOrderId = newRef.key;
-
-    // Show success modal
     document.getElementById('success-order-id').textContent = currentOrderId;
-
-    // WA preview
     document.getElementById('wa-preview').innerHTML = `
       <div class="wa-bubble">
-        <div class="wa-header">📲 Notifikasi WhatsApp</div>
-        Halo ${name}! 👋<br>
-        Pesanan Anda sedang dibuat.<br>
-        Layanan: [${selectedService === 'cleaning' ? 'Cleaning' : 'Laundry'}]<br>
-        Jadwal: ${date} ${time}<br>
-        Alamat: ${addr}<br>
-        Total: <strong>Rp ${estimatedPrice.toLocaleString('id-ID')}</strong><br><br>
+        <div class="wa-header">📲 Preview Notifikasi WA</div>
+        Halo ${order.name}! 👋<br>
+        Pesanan Anda berhasil dibuat.<br>
+        Layanan: ${order.serviceType==='cleaning'?'Cleaning':'Laundry'} — ${order.detail.jenis}<br>
+        Jadwal: ${order.date} ${order.time}<br>
+        Total: <strong>Rp ${estimatedPrice.toLocaleString('id-ID')}</strong><br>
         Status: <strong>MENUNGGU KONFIRMASI</strong><br>
         Terima kasih, Bantu.IN 🙏
-      </div>
-    `;
-
+      </div>`;
     selectedRating = 0;
     document.querySelectorAll('.star').forEach(s => s.classList.remove('lit'));
     openModal('modal-success');
+    // Trigger push notification (foreground demo)
+    showInAppNotif('Pesanan Diterima! 🎉', 'Bantu.IN sedang memproses pesanan Anda.');
     resetForm();
-    showPage('home');
-    showToast('Pesanan berhasil dibuat! 🎉','success');
   } catch(e) {
-    console.error(e);
-    showToast('Gagal menyimpan pesanan. Coba lagi!','error');
+    console.error(e); showToast('Gagal menyimpan! Coba lagi.','error');
   }
-
   btn.disabled = false; btn.textContent = '🚀 Pesan Sekarang!';
 }
 
-/* ══════════════════════════════════════════════
+/* ════════════════════════════════
    RATING
-══════════════════════════════════════════════ */
+════════════════════════════════ */
 function setRating(n) {
   selectedRating = n;
-  document.querySelectorAll('.star').forEach((s,i) => s.classList.toggle('lit', i < n));
+  document.querySelectorAll('.star').forEach((s,i) => s.classList.toggle('lit', i<n));
 }
-
 async function saveRating() {
   if (!currentOrderId || !window._firebaseReady) return;
-  const ulasan = document.getElementById('ulasan').value;
-  const orderRef = window._ref(window._db, 'orders/' + currentOrderId);
-  await window._update(orderRef, { rating: selectedRating, ulasan });
+  await window._update(window._ref(window._db,'orders/'+currentOrderId), {
+    rating: selectedRating,
+    ulasan: document.getElementById('ulasan').value
+  });
 }
 
-/* ══════════════════════════════════════════════
+/* ════════════════════════════════
    TRACKING
-══════════════════════════════════════════════ */
+════════════════════════════════ */
 const STATUS_STEPS = ['Menunggu','Diproses','Pickup','Dicuci','Diantar','Selesai'];
 const STATUS_ICONS = ['⏳','⚙️','🚚','🫧','📦','✅'];
-const STATUS_DESC = [
-  'Pesanan Anda sedang menunggu konfirmasi admin.',
-  'Pesanan diproses, petugas sedang disiapkan.',
+const STATUS_DESC  = [
+  'Pesanan menunggu konfirmasi admin.',
+  'Diproses – petugas disiapkan.',
   'Petugas menuju lokasi Anda.',
-  'Pakaian/area sedang dicuci/dibersihkan.',
-  'Pesanan sedang diantar ke lokasi Anda.',
-  'Pesanan selesai. Terima kasih! 🙏',
+  'Sedang dicuci/dibersihkan.',
+  'Pesanan dalam perjalanan ke Anda.',
+  'Selesai! Terima kasih 🙏',
 ];
 
 function trackOrder() {
-  const input = document.getElementById('track-input').value.trim();
-  if (!input) { showToast('Masukkan ID atau nomor WA!','error'); return; }
+  const q = document.getElementById('track-input').value.trim();
+  if (!q) { showToast('Masukkan ID atau nomor WA!','error'); return; }
   if (!window._firebaseReady) { showToast('Koneksi belum siap','error'); return; }
-
   document.getElementById('track-result').style.display = 'none';
-  document.getElementById('track-empty').style.display = 'none';
-
-  const ordersRef = window._ref(window._db, 'orders');
-  window._get(ordersRef).then(snap => {
-    if (!snap.exists()) { document.getElementById('track-empty').style.display = 'block'; return; }
+  document.getElementById('track-empty').style.display  = 'none';
+  window._get(window._ref(window._db,'orders')).then(snap => {
+    if (!snap.exists()) { document.getElementById('track-empty').style.display='block'; return; }
     const data = snap.val();
-    let found = null, foundId = null;
-    for (const [id, o] of Object.entries(data)) {
-      if (id === input || o.wa === input || o.wa.replace(/\D/g,'') === input.replace(/\D/g,'')) {
-        found = o; foundId = id; break;
-      }
+    let found=null, foundId=null;
+    for (const [id,o] of Object.entries(data)) {
+      if (id===q || o.wa===q || o.wa.replace(/\D/g,'')===q.replace(/\D/g,'')) { found=o; foundId=id; break; }
     }
-    if (!found) { document.getElementById('track-empty').style.display = 'block'; return; }
+    if (!found) { document.getElementById('track-empty').style.display='block'; return; }
     renderTrackResult(foundId, found);
-  }).catch(() => showToast('Gagal mengambil data','error'));
+  }).catch(()=>showToast('Gagal mengambil data','error'));
 }
 
 function renderTrackResult(id, o) {
-  const curIdx = STATUS_STEPS.indexOf(o.status);
-  let steps = STATUS_STEPS.map((s,i) => {
-    const cls = i < curIdx ? 'done' : (i === curIdx ? 'current' : '');
-    return `<div class="track-step">
-      <div class="track-dot ${cls}">${STATUS_ICONS[i]}</div>
-      <div class="track-info">
-        <h5>${s}</h5>
-        <p>${STATUS_DESC[i]}</p>
-      </div>
-    </div>`;
-  }).join('');
-
-  const html = `
+  const ci = STATUS_STEPS.indexOf(o.status);
+  const steps = STATUS_STEPS.map((s,i) => `
+    <div class="track-step">
+      <div class="track-dot ${i<ci?'done':i===ci?'current':''}">${STATUS_ICONS[i]}</div>
+      <div class="track-info"><h5>${s}</h5><p>${STATUS_DESC[i]}</p></div>
+    </div>`).join('');
+  document.getElementById('track-result').innerHTML = `
     <div class="form-card">
-      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;flex-wrap:wrap;gap:12px">
-        <div>
-          <div style="font-size:.8rem;color:var(--gray)">ID Pesanan</div>
-          <div style="font-weight:700;font-size:1rem">${id}</div>
-        </div>
-        <span class="status-badge s-${curIdx+1}">${o.status}</span>
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;flex-wrap:wrap;gap:8px">
+        <div><div style="font-size:.75rem;color:var(--gray)">ID Pesanan</div><div style="font-weight:700">${id.slice(-10)}</div></div>
+        <span class="status-badge s-${ci+1}">${o.status}</span>
       </div>
       <div class="info-box">
         👤 <strong>${o.name}</strong> | 📱 ${o.wa}<br>
-        🛎️ ${o.serviceType === 'cleaning' ? 'Cleaning — ' + o.detail.jenis : 'Laundry — ' + o.detail.jenis}<br>
+        🛎️ ${o.serviceType==='cleaning'?'Cleaning':'Laundry'} — ${o.detail?.jenis||'-'}<br>
         📅 ${o.date} ${o.time} | 📍 ${o.address}<br>
-        💰 Rp ${o.price?.toLocaleString('id-ID')} | 💳 ${o.payment}
+        💰 Rp ${(o.price||0).toLocaleString('id-ID')} | 💳 ${o.payment}
       </div>
-      <div class="track-timeline">${steps}</div>
-      ${o.status === 'Selesai' && o.rating ? `<div style="margin-top:16px;text-align:center">Rating: ${'★'.repeat(o.rating)}${'☆'.repeat(5-o.rating)} (${o.ulasan || '-'})</div>` : ''}
-    </div>
-  `;
-  document.getElementById('track-result').innerHTML = html;
+      <div style="margin-top:4px">${steps}</div>
+      ${o.rating?`<div style="text-align:center;margin-top:8px;font-size:.85rem">Rating: ${'★'.repeat(o.rating)}${'☆'.repeat(5-o.rating)}</div>`:''}
+    </div>`;
   document.getElementById('track-result').style.display = 'block';
 }
 
-/* ══════════════════════════════════════════════
+/* ════════════════════════════════
    ADMIN
-══════════════════════════════════════════════ */
+════════════════════════════════ */
 function adminLogin() {
-  const pw = document.getElementById('admin-pw').value;
-  if (pw === ADMIN_PASSWORD) {
+  if (document.getElementById('admin-pw').value === ADMIN_PW) {
     adminLoggedIn = true;
     document.getElementById('admin-login').style.display = 'none';
     document.getElementById('admin-dashboard').style.display = 'block';
     loadAdminOrders();
     showToast('Login berhasil ✓','success');
-  } else {
-    showToast('Password salah!','error');
-  }
+  } else { showToast('Password salah!','error'); }
 }
-
 function adminLogout() {
   adminLoggedIn = false;
   document.getElementById('admin-login').style.display = 'block';
   document.getElementById('admin-dashboard').style.display = 'none';
   document.getElementById('admin-pw').value = '';
 }
-
 function loadAdminOrders() {
-  if (!window._firebaseReady) { setTimeout(loadAdminOrders, 500); return; }
-  const ordersRef = window._ref(window._db, 'orders');
-  window._onValue(ordersRef, snap => {
+  if (!window._firebaseReady) { setTimeout(loadAdminOrders,500); return; }
+  window._onValue(window._ref(window._db,'orders'), snap => {
     allOrders = snap.exists() ? snap.val() : {};
-    updateStats();
-    renderAdminTable();
+    updateStats(); renderAdminTable();
+    // badge on bottom nav
+    const w = Object.values(allOrders).filter(o=>o.status==='Menunggu').length;
+    const badge = document.getElementById('badge-order');
+    badge.textContent = w; badge.classList.toggle('show', w>0);
   });
 }
-
 function updateStats() {
   const orders = Object.values(allOrders);
-  document.getElementById('s-total').textContent = orders.length;
-  document.getElementById('s-menunggu').textContent = orders.filter(o => o.status === 'Menunggu').length;
-  document.getElementById('s-proses').textContent = orders.filter(o => ['Diproses','Pickup','Dicuci','Diantar'].includes(o.status)).length;
-  document.getElementById('s-selesai').textContent = orders.filter(o => o.status === 'Selesai').length;
+  document.getElementById('s-total').textContent    = orders.length;
+  document.getElementById('s-menunggu').textContent = orders.filter(o=>o.status==='Menunggu').length;
+  document.getElementById('s-proses').textContent   = orders.filter(o=>['Diproses','Pickup','Dicuci','Diantar'].includes(o.status)).length;
+  document.getElementById('s-selesai').textContent  = orders.filter(o=>o.status==='Selesai').length;
 }
-
 function renderAdminTable() {
-  const fStatus = document.getElementById('filter-status').value;
-  const fType = document.getElementById('filter-type').value;
-  const tbody = document.getElementById('admin-tbody');
-
+  const fS = document.getElementById('filter-status').value;
+  const fT = document.getElementById('filter-type').value;
   let entries = Object.entries(allOrders);
-  if (fStatus) entries = entries.filter(([,o]) => o.status === fStatus);
-  if (fType) entries = entries.filter(([,o]) => o.serviceType === fType);
-  entries.sort((a,b) => new Date(b[1].createdAt) - new Date(a[1].createdAt));
-
-  if (!entries.length) {
-    tbody.innerHTML = `<tr><td colspan="10" style="text-align:center;padding:32px;color:var(--gray)">Tidak ada pesanan ditemukan</td></tr>`;
-    return;
-  }
-
-  tbody.innerHTML = entries.map(([id, o]) => {
-    const si = STATUS_STEPS.indexOf(o.status);
-    return `<tr>
-      <td style="font-size:.77rem;color:var(--gray);max-width:80px;overflow:hidden;text-overflow:ellipsis" title="${id}">${id.slice(-8)}</td>
+  if (fS) entries = entries.filter(([,o])=>o.status===fS);
+  if (fT) entries = entries.filter(([,o])=>o.serviceType===fT);
+  entries.sort((a,b)=>new Date(b[1].createdAt)-new Date(a[1].createdAt));
+  const tbody = document.getElementById('admin-tbody');
+  if (!entries.length) { tbody.innerHTML=`<tr><td colspan="8" style="text-align:center;padding:28px;color:var(--gray)">Tidak ada data</td></tr>`; return; }
+  const si = s => STATUS_STEPS.indexOf(s);
+  tbody.innerHTML = entries.map(([id,o])=>`
+    <tr>
+      <td style="font-size:.72rem;color:var(--gray)">${id.slice(-6)}</td>
       <td><strong>${o.name}</strong></td>
-      <td><a href="https://wa.me/${o.wa.replace(/\D/g,'')}" target="_blank" style="color:var(--teal)">${o.wa}</a></td>
+      <td><a href="https://wa.me/${o.wa.replace(/\D/g,'')}" target="_blank" style="color:var(--teal);font-size:.82rem">${o.wa}</a></td>
       <td><span class="chip ${o.serviceType}">${o.serviceType}</span></td>
-      <td>${o.detail?.jenis || '-'}</td>
-      <td>${o.date} ${o.time}</td>
-      <td>Rp ${(o.price||0).toLocaleString('id-ID')}</td>
-      <td>${o.payment}</td>
-      <td><span class="status-badge s-${si+1}">${o.status}</span></td>
+      <td style="white-space:nowrap;font-size:.8rem">${o.date}</td>
+      <td style="white-space:nowrap;font-size:.8rem">Rp ${(o.price||0).toLocaleString('id-ID')}</td>
+      <td><span class="status-badge s-${si(o.status)+1}">${o.status}</span></td>
       <td>
         <div class="order-actions">
           <button class="action-btn ab-blue" onclick="openDetail('${id}')">📄</button>
-          ${o.status !== 'Selesai' && o.status !== 'Dibatalkan' ? `<button class="action-btn ab-green" onclick="advanceStatus('${id}')">▶</button>` : ''}
-          ${o.status !== 'Dibatalkan' && o.status !== 'Selesai' ? `<button class="action-btn ab-red" onclick="cancelOrder('${id}')">✕</button>` : ''}
+          ${o.status!=='Selesai'&&o.status!=='Dibatalkan'?`<button class="action-btn ab-green" onclick="advanceStatus('${id}')">▶</button>`:''}
+          ${o.status!=='Dibatalkan'&&o.status!=='Selesai'?`<button class="action-btn ab-red" onclick="cancelOrder('${id}')">✕</button>`:''}
         </div>
       </td>
-    </tr>`;
-  }).join('');
+    </tr>`).join('');
 }
-
-const STATUS_NEXT = {
-  'Menunggu':'Diproses','Diproses':'Pickup','Pickup':'Dicuci',
-  'Dicuci':'Diantar','Diantar':'Selesai'
-};
-
+const STATUS_NEXT = {Menunggu:'Diproses',Diproses:'Pickup',Pickup:'Dicuci',Dicuci:'Diantar',Diantar:'Selesai'};
 async function advanceStatus(id) {
-  const o = allOrders[id];
-  if (!o) return;
-  const next = STATUS_NEXT[o.status];
-  if (!next) return;
-  await window._update(window._ref(window._db, 'orders/' + id), { status: next });
-  showToast(`Status → ${next}`, 'success');
+  const next = STATUS_NEXT[allOrders[id]?.status]; if (!next) return;
+  await window._update(window._ref(window._db,'orders/'+id),{status:next});
+  showToast('Status → '+next,'success');
+  // Show in-app notif to simulate push
+  showInAppNotif('Update Pesanan 📦', 'Status pesanan diubah menjadi '+next);
 }
-
 async function cancelOrder(id) {
   if (!confirm('Batalkan pesanan ini?')) return;
-  await window._update(window._ref(window._db, 'orders/' + id), { status: 'Dibatalkan' });
+  await window._update(window._ref(window._db,'orders/'+id),{status:'Dibatalkan'});
   showToast('Pesanan dibatalkan','error');
 }
-
 function openDetail(id) {
-  const o = allOrders[id];
-  if (!o) return;
+  const o = allOrders[id]; if (!o) return;
   const si = STATUS_STEPS.indexOf(o.status);
   document.getElementById('modal-detail-body').innerHTML = `
-    <div class="info-box" style="margin-bottom:16px">
+    <div class="info-box">
       <strong>ID:</strong> ${id}<br>
       👤 <strong>${o.name}</strong> | 📱 ${o.wa}<br>
       📍 ${o.address}<br>
-      🛎️ ${o.serviceType === 'cleaning' ? 'Cleaning' : 'Laundry'} — ${o.detail?.jenis}<br>
-      ${o.serviceType === 'cleaning' ? `Luas: ${o.detail?.area} m² | Durasi: ${o.detail?.durasi} jam` : `Berat: ${o.detail?.berat} kg | Delivery: ${o.detail?.delivery}`}<br>
-      📅 ${o.date} ${o.time}<br>
-      💰 Rp ${(o.price||0).toLocaleString('id-ID')} | 💳 ${o.payment}<br>
-      📝 ${o.notes || '-'}<br>
-      ⭐ Rating: ${o.rating ? '★'.repeat(o.rating) : '-'} ${o.ulasan ? `(${o.ulasan})` : ''}<br>
-      🕒 Dibuat: ${new Date(o.createdAt).toLocaleString('id-ID')}<br>
-      <br>Status: <span class="status-badge s-${si+1}">${o.status}</span>
+      🛎️ ${o.serviceType==='cleaning'?'Cleaning':'Laundry'} — ${o.detail?.jenis}<br>
+      ${o.serviceType==='cleaning'?`Luas: ${o.detail?.area} m² | Durasi: ${o.detail?.durasi} jam`:`Berat: ${o.detail?.berat} kg | Delivery: ${o.detail?.delivery}`}<br>
+      📅 ${o.date} ${o.time} | 💳 ${o.payment}<br>
+      💰 Rp ${(o.price||0).toLocaleString('id-ID')}<br>
+      📝 ${o.notes||'-'}<br>
+      ⭐ ${o.rating?'★'.repeat(o.rating):'-'} ${o.ulasan?`(${o.ulasan})`:''}<br>
+      Status: <span class="status-badge s-${si+1}">${o.status}</span>
     </div>
     <div class="form-group">
       <label>Update Status</label>
       <select id="detail-status">
-        ${['Menunggu','Diproses','Pickup','Dicuci','Diantar','Selesai','Dibatalkan'].map(s => `<option value="${s}" ${o.status===s?'selected':''}>${s}</option>`).join('')}
+        ${['Menunggu','Diproses','Pickup','Dicuci','Diantar','Selesai','Dibatalkan'].map(s=>`<option value="${s}"${o.status===s?' selected':''}>${s}</option>`).join('')}
       </select>
-    </div>
-  `;
+    </div>`;
   document.getElementById('modal-detail-actions').innerHTML = `
-    <button class="btn btn-primary" style="flex:1" onclick="saveDetailStatus('${id}')">💾 Simpan Status</button>
-    <a href="https://wa.me/${o.wa.replace(/\D/g,'')}" target="_blank" class="btn btn-secondary" style="flex:1;text-decoration:none">💬 WA Pelanggan</a>
-  `;
+    <button class="btn btn-primary" style="flex:1;justify-content:center" onclick="saveDetailStatus('${id}')">💾 Simpan</button>
+    <a href="https://wa.me/${o.wa.replace(/\D/g,'')}" target="_blank" class="btn btn-secondary" style="flex:1;justify-content:center;text-decoration:none">💬 WA</a>`;
   openModal('modal-detail');
 }
-
 async function saveDetailStatus(id) {
-  const newStatus = document.getElementById('detail-status').value;
-  await window._update(window._ref(window._db, 'orders/' + id), { status: newStatus });
-  closeModal('modal-detail');
-  showToast('Status diperbarui ✓','success');
+  const s = document.getElementById('detail-status').value;
+  await window._update(window._ref(window._db,'orders/'+id),{status:s});
+  closeModal('modal-detail'); showToast('Status diperbarui ✓','success');
 }
-
 function exportCSV() {
   const rows = [['ID','Nama','WA','Layanan','Jenis','Tanggal','Jam','Alamat','Harga','Bayar','Status','Rating','Ulasan']];
-  Object.entries(allOrders).forEach(([id,o]) => {
-    rows.push([id,o.name,o.wa,o.serviceType,o.detail?.jenis||'',o.date,o.time,o.address||'',o.price||0,o.payment,o.status,o.rating||0,o.ulasan||'']);
-  });
-  const csv = rows.map(r => r.map(v => `"${String(v).replace(/"/g,'""')}"`).join(',')).join('\n');
-  const blob = new Blob([csv], { type: 'text/csv' });
-  const a = document.createElement('a');
-  a.href = URL.createObjectURL(blob);
-  a.download = 'bantuin_orders_' + new Date().toISOString().split('T')[0] + '.csv';
-  a.click();
-  showToast('CSV berhasil diunduh!','success');
+  Object.entries(allOrders).forEach(([id,o])=>rows.push([id,o.name,o.wa,o.serviceType,o.detail?.jenis||'',o.date,o.time,o.address||'',o.price||0,o.payment,o.status,o.rating||0,o.ulasan||'']));
+  const csv = rows.map(r=>r.map(v=>`"${String(v).replace(/"/g,'""')}"`).join(',')).join('\n');
+  const a = Object.assign(document.createElement('a'),{href:URL.createObjectURL(new Blob([csv],{type:'text/csv'})),download:'bantuin_'+new Date().toISOString().split('T')[0]+'.csv'});
+  a.click(); showToast('CSV diunduh!','success');
 }
 
-/* ══════════════════════════════════════════════
+/* ════════════════════════════════
    MODAL & TOAST
-══════════════════════════════════════════════ */
-function openModal(id) { document.getElementById(id).classList.add('open'); }
+════════════════════════════════ */
+function openModal(id)  { document.getElementById(id).classList.add('open'); }
 function closeModal(id) {
   document.getElementById(id).classList.remove('open');
-  if (id === 'modal-success' && selectedRating) saveRating();
+  if (id==='modal-success' && selectedRating) saveRating();
 }
+document.querySelectorAll('.overlay').forEach(ov => {
+  ov.addEventListener('click', e => { if (e.target===ov) closeModal(ov.id); });
+});
+// Swipe down to close modal
+let swipeStartY = 0;
+document.querySelectorAll('.modal').forEach(m => {
+  m.addEventListener('touchstart', e => swipeStartY = e.touches[0].clientY, {passive:true});
+  m.addEventListener('touchend',   e => {
+    if (e.changedTouches[0].clientY - swipeStartY > 80) closeModal(m.closest('.overlay').id);
+  }, {passive:true});
+});
 
 let toastTimer;
 function showToast(msg, type='') {
   const t = document.getElementById('toast');
-  t.textContent = msg;
-  t.className = 'show ' + type;
+  t.textContent = msg; t.className = 'show ' + type;
   clearTimeout(toastTimer);
-  toastTimer = setTimeout(() => t.className = '', 3000);
+  toastTimer = setTimeout(()=>t.className='', 3000);
 }
 
-/* ══════════════════════════════════════════════
-   WHATSAPP
-══════════════════════════════════════════════ */
 function openWhatsApp() {
-  window.open('https://wa.me/6282117903982?text=Halo+Bantu.IN,+saya+ingin+memesan+layanan', '_blank');
+  window.open('https://wa.me/6208122345678?text=Halo+Bantu.IN,+saya+ingin+memesan+layanan','_blank');
 }
 
-/* ══════════════════════════════════════════════
-   CLOSE OVERLAY ON CLICK OUTSIDE
-══════════════════════════════════════════════ */
-document.querySelectorAll('.overlay').forEach(ov => {
-  ov.addEventListener('click', e => { if (e.target === ov) closeModal(ov.id); });
-});
-
-/* ══════════════════════════════════════════════
-   FIREBASE READY CHECK
-══════════════════════════════════════════════ */
-document.addEventListener('firebaseReady', () => {
-  console.log('✅ Firebase connected');
-});
+document.addEventListener('firebaseReady', () => console.log('✅ Firebase ready'));
 </script>
 </body>
 </html>
